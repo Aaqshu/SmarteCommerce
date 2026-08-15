@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #b8860b;
+  --accent: #8b0000;
+  --brand-font: Georgia, serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #daa520;
+    --accent: #dc143c;
+  }
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--brand-font);
+}
+
+.btn-primary {
+  @apply bg-[var(--primary)] text-white px-6 py-3 rounded-md hover:opacity-90 transition-opacity;
+}
+
+.btn-secondary {
+  @apply bg-[var(--accent)] text-white px-6 py-3 rounded-md hover:opacity-90 transition-opacity;
+}

@@ -1,0 +1,20 @@
+{
+  "name": "@smartecommerce/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./types": "./src/types.ts",
+    "./tenant-config": "./src/tenant-config.ts",
+    "./demo-data": "./src/demo-data.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.2"
+  }
+}
