@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-Commerce SaaS — Structure & Flow</title>
+<style>
+  :root {
+    --bg: #020617; --panel: #0f172a; --panel2: #1e293b;
+    --cyan: #22d3ee; --emerald: #34d399; --violet: #a78bfa;
+    --amber: #fbbf24; --rose: #fb7185; --slate: #94a3b8;
+    --text: #e2e8f0; --muted: #64748b;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI', -apple-system, sans-serif; min-height:100vh; }
+  .wrap { max-width:1200px; margin:0 auto; padding:24px 20px 60px; }
+
+  header { display:flex; align-items:center; gap:16px; padding:20px 0 24px; border-bottom:1px solid var(--panel2); }
+  .logo { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--cyan),var(--violet)); display:flex; align-items:center; justify-content:center; font-size:20px; }
+  header h1 { font-size:22px; font-weight:700; letter-spacing:-0.3px; }
+  header p { color:var(--muted); font-size:13px; margin-top:3px; }
+
+  .tabs { display:flex; gap:8px; margin:24px 0 20px; flex-wrap:wrap; }
+  .tab { padding:10px 20px; border-radius:10px; background:var(--panel); border:1px solid var(--panel2); cursor:pointer; font-size:14px; font-weight:600; color:var(--muted); transition:all .15s; }
+  .tab:hover { border-color:var(--cyan); color:var(--text); }
+  .tab.active { background:linear-gradient(135deg,rgba(34,211,238,.15),rgba(167,139,250,.15)); border-color:var(--cyan); color:var(--cyan); }
+  .tab .num { display:inline-block; margin-right:6px; font-size:11px; background:var(--panel2); padding:2px 7px; border-radius:6px; }
+
+  .view { display:none; animation:fade .3s ease; }
+  .view.active { display:block; }
+  @keyframes fade { from {opacity:0; transform:translateY(6px);} to {opacity:1;} }
+
+  .sect-label { font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin:28px 0 12px; display:flex; align-items:center; gap:10px; }
+  .sect-label::after { content:''; flex:1; height:1px; background:var(--panel2); }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; }
+  .card { background:var(--panel); border:1px solid var(--panel2); border-radius:12px; padding:14px; transition:transform .15s, border-color .15s; }
+  .card:hover { transform:translateY(-2px); border-color:var(--slate); }
+  .card .ico { font-size:18px; margin-bottom:8px; display:block; }
+  .card h4 { font-size:13.5px; font-weight:600; margin-bottom:4px; }
+  .card .path { font-family:ui-monospace, monospace; font-size:10.5px; color:var(--muted); background:var(--bg); padding:3px 7px; border-radius:5px; display:inline-block; margin-top:4px; }
+  .card p { font-size:11.5px; color:var(--muted); margin-top:6px; line-height:1.5; }
+  .card .tag { display:inline-block; font-size:9.5px; padding:2px 8px; border-radius:20px; margin-top:8px; font-weight:600; }
+  .tag.t-cyan { background:rgba(34,211,238,.12); color:var(--cyan); }
+  .tag.t-emerald { background:rgba(52,211,153,.12); color:var(--emerald); }
+  .tag.t-violet { background:rgba(167,139,250,.12); color:var(--violet); }
+  .tag.t-amber { background:rgba(251,191,36,.12); color:var(--amber); }
+  .tag.t-rose { background:rgba(251,113,133,.12); color:var(--rose); }
+
+  /* Flow diagram */
+  .flow { background:var(--panel); border:1px solid var(--panel2); border-radius:14px; padding:24px; overflow-x:auto; }
+  .flow-row { display:flex; align-items:center; gap:10px; min-width:max-content; padding:6px 0; }
+  .node { min-width:150px; max-width:190px; background:var(--panel2); border:1.5px solid var(--slate); border-radius:10px; padding:10px 14px; text-align:center; position:relative; }
+  .node h5 { font-size:12px; font-weight:600; }
+  .node span { display:block; font-size:9.5px; color:var(--muted); margin-top:3px; }
+  .node.c-cyan { border-color:var(--cyan); } .node.c-cyan h5 { color:var(--cyan); }
+  .node.c-emerald { border-color:var(--emerald); } .node.c-emerald h5 { color:var(--emerald); }
+  .node.c-violet { border-color:var(--violet); } .node.c-violet h5 { color:var(--violet); }
+  .node.c-amber { border-color:var(--amber); } .node.c-amber h5 { color:var(--amber); }
+  .node.c-rose { border-color:var(--rose); } .node.c-rose h5 { color:var(--rose); }
+  .node.hot { box-shadow:0 0 0 3px rgba(34,211,238,.15); }
+  .arrow { color:var(--slate); font-size:16px; flex-shrink:0; }
+  .arrow .lab { display:block; font-size:8.5px; color:var(--muted); text-align:center; margin-top:-2px; }
+  .branch { display:flex; gap:12px; margin-top:14px; position:relative; padding-left:170px; }
+  .branch::before { content:'⤵'; position:absolute; left:80px; top:-14px; color:var(--slate); font-size:18px; }
+  .branch .node { min-width:130px; }
+  .note { background:rgba(34,211,238,.06); border:1px dashed rgba(34,211,238,.35); border-radius:10px; padding:10px 14px; font-size:11.5px; color:var(--cyan); margin-top:14px; }
+
+  /* Architecture layers */
+  .arch { display:flex; flex-direction:column; gap:16px; }
+  .layer { border:1.5px solid; border-radius:14px; padding:18px; position:relative; }
+  .layer h3 { font-size:12px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .layer.l-front { border-color:rgba(34,211,238,.4); background:rgba(8,51,68,.25); } .layer.l-front h3 { color:var(--cyan); }
+  .layer.l-back { border-color:rgba(52,211,153,.4); background:rgba(6,78,59,.25); } .layer.l-back h3 { color:var(--emerald); }
+  .layer.l-data { border-color:rgba(167,139,250,.4); background:rgba(76,29,149,.25); } .layer.l-data h3 { color:var(--violet); }
+  .layer.l-ext { border-color:rgba(148,163,184,.4); background:rgba(30,41,59,.4); } .layer.l-ext h3 { color:var(--slate); }
+  .arch-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; }
+  .arch-item { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:12px; text-align:center; }
+  .arch-item .ai { font-size:20px; display:block; margin-bottom:6px; }
+  .arch-item b { font-size:12px; display:block; }
+  .arch-item span { font-size:9.5px; color:var(--muted); display:block; margin-top:3px; }
+  .legend { display:flex; gap:16px; flex-wrap:wrap; margin-top:20px; padding:14px 18px; background:var(--panel); border-radius:10px; }
+  .legend .item { display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--muted); }
+  .legend .dot { width:10px; height:10px; border-radius:3px; }
+
+  footer { margin-top:40px; padding-top:18px; border-top:1px solid var(--panel2); color:var(--muted); font-size:11.5px; display:flex; justify-content:space-between; }
+  @media (max-width:640px) { .grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="logo">🛒</div>
+  <div>
+    <h1>E-Commerce SaaS — Site Structure & Flow</h1>
+    <p>Multi-tenant · GST (India) · Logistics · Razorpay · Next.js + NestJS + PostgreSQL</p>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-v="v1"><span class="num">1</span>Site Map</div>
+  <div class="tab" data-v="v2"><span class="num">2</span>Order Flow</div>
+  <div class="tab" data-v="v3"><span class="num">3</span>GST Flow</div>
+  <div class="tab" data-v="v4"><span class="num">4</span>Logistics Flow</div>
+  <div class="tab" data-v="v5"><span class="num">5</span>Architecture</div>
+  <div class="tab" data-v="v6"><span class="num">6</span>Tenant Lifecycle</div>
+</div>
+
+<!-- ══════════════ VIEW 1: SITE MAP ══════════════ -->
+<div class="view active" id="v1">
+  <div class="sect-label">Storefront — shop.customer.com (public, white-label per tenant)</div>
+  <div class="grid">
+    <div class="card"><span class="ico">🏠</span><h4>Home</h4><span class="path">/</span><p>Hero banner, featured categories, best sellers — all from TenantConfig</p><span class="tag t-cyan">Config-driven</span></div>
+    <div class="card"><span class="ico">📦</span><h4>Shop / Catalog</h4><span class="path">/shop</span><p>Product grid with filters (category, brand, price, GST-inclusive pricing)</p></div>
+    <div class="card"><span class="ico">🔍</span><h4>Search</h4><span class="path">/search?q=</span><p>Product search with suggestions</p></div>
+    <div class="card"><span class="ico">🖼️</span><h4>Product Detail</h4><span class="path">/product/[slug]</span><p>Images, variants, price (MRP + tax breakup), stock, add to cart</p><span class="tag t-emerald">GST price breakup</span></div>
+    <div class="card"><span class="ico">🛒</span><h4>Cart</h4><span class="path">/cart</span><p>Line items, qty change, price summary incl. GST</p></div>
+    <div class="card"><span class="ico">💳</span><h4>Checkout</h4><span class="path">/checkout</span><p>Address, shipping, GSTIN entry (B2B), payment select (COD / Razorpay UPI)</p><span class="tag t-amber">B2B GSTIN capture</span></div>
+    <div class="card"><span class="ico">✅</span><h4>Order Confirmation</h4><span class="path">/order/[id]/success</span><p>Order summary, payment status, invoice download</p></div>
+    <div class="card"><span class="ico">📦</span><h4>Track Order</h4><span class="path">/order/[id]/track</span><p>Live shipment timeline (Shiprocket webhook events)</p><span class="tag t-violet">Logistics</span></div>
+    <div class="card"><span class="ico">👤</span><h4>My Account</h4><span class="path">/account</span><p>Orders, addresses, wallet, saved cards</p></div>
+    <div class="card"><span class="ico">📜</span><h4>My Invoices</h4><span class="path">/account/invoices</span><p>GST invoices + PDF download</p><span class="tag t-emerald">GST</span></div>
+    <div class="card"><span class="ico">↩️</span><h4>Returns</h4><span class="path">/account/returns</span><p>Request return → credit note generated</p><span class="tag t-emerald">GST credit note</span></div>
+    <div class="card"><span class="ico">📞</span><h4>Contact</h4><span class="path">/contact</span><p>Tenant contact info from config</p></div>
+  </div>
+
+  <div class="sect-label">Admin — admin.yourapp.com (seller dashboard, per tenant)</div>
+  <div class="grid">
+    <div class="card"><span class="ico">📊</span><h4>Dashboard</h4><span class="path">/admin</span><p>Sales, orders, revenue, low-stock alerts</p></div>
+    <div class="card"><span class="ico">📦</span><h4>Products</h4><span class="path">/admin/products</span><p>CRUD, variants, HSN code, GST rate, images</p><span class="tag t-emerald">HSN per product</span></div>
+    <div class="card"><span class="ico">🗂️</span><h4>Categories / Brands</h4><span class="path">/admin/categories</span><p>Tree management</p></div>
+    <div class="card"><span class="ico">🏭</span><h4>Inventory</h4><span class="path">/admin/inventory</span><p>Stock levels, adjustments, ledger</p></div>
+    <div class="card"><span class="ico">📋</span><h4>Orders</h4><span class="path">/admin/orders</span><p>List, detail, status updates, invoice per order</p><span class="tag t-amber">Order → Invoice</span></div>
+    <div class="card"><span class="ico">🚚</span><h4>Shipments</h4><span class="path">/admin/shipments</span><p>Create shipment (Shiprocket), AWB, label, track</p><span class="tag t-violet">Logistics</span></div>
+    <div class="card"><span class="ico">↩️</span><h4>Returns / Refunds</h4><span class="path">/admin/returns</span><p>Approve → credit note + refund (Razorpay)</p></div>
+    <div class="card"><span class="ico">🧾</span><h4>Invoices</h4><span class="path">/admin/invoices</span><p>All invoices, series per FY, PDF, e-invoice JSON</p><span class="tag t-emerald">GST</span></div>
+    <div class="card"><span class="ico">📈</span><h4>GST Reports</h4><span class="path">/admin/gst-reports</span><p>GSTR-1, GSTR-3B, HSN summary, CSV export</p><span class="tag t-emerald">GST filing</span></div>
+    <div class="card"><span class="ico">🧑‍🤝‍🧑</span><h4>Customers</h4><span class="path">/admin/customers</span><p>List, orders, GSTIN (B2B), lifetime value</p></div>
+    <div class="card"><span class="ico">🎨</span><h4>Storefront Config</h4><span class="path">/admin/config</span><p>Theme colors, banner, logo, payment toggles, GST display</p><span class="tag t-cyan">Configurable</span></div>
+    <div class="card"><span class="ico">⚙️</span><h4>Settings</h4><span class="path">/admin/settings</span><p>Business info, GSTIN, address (pickup), API keys (Razorpay/Shiprocket)</p><span class="tag t-cyan">Per-tenant keys</span></div>
+  </div>
+
+  <div class="sect-label">Platform Admin — you (SaaS owner)</div>
+  <div class="grid">
+    <div class="card"><span class="ico">🏢</span><h4>Tenants</h4><span class="path">/platform/tenants</span><p>All sellers, provision new tenant, status (active/suspended)</p><span class="tag t-rose">SaaS owner</span></div>
+    <div class="card"><span class="ico">💎</span><h4>Plans & Billing</h4><span class="path">/platform/plans</span><p>Starter/Pro/Enterprise, Razorpay subscriptions</p><span class="tag t-rose">SaaS owner</span></div>
+    <div class="card"><span class="ico">📊</span><h4>Platform Analytics</h4><span class="path">/platform/analytics</span><p>MRR, tenant counts, per-tenant revenue</p><span class="tag t-rose">SaaS owner</span></div>
+  </div>
+</div>
+
+<!-- ══════════════ VIEW 2: ORDER FLOW ══════════════ -->
+<div class="view" id="v2">
+  <div class="sect-label">Checkout → Payment → Fulfillment</div>
+  <div class="flow">
+    <div class="flow-row">
+      <div class="node c-cyan"><h5>🛒 Cart</h5><span>items + qty</span></div>
+      <div class="arrow">→<span class="lab">validate</span></div>
+      <div class="node c-cyan"><h5>Checkout</h5><span>address + GSTIN + payment method</span></div>
+      <div class="arrow">→<span class="lab">POST /orders</span></div>
+      <div class="node c-emerald"><h5>Create Order</h5><span>TX: stock lock + price re-check + GST calc</span></div>
+      <div class="arrow">→<span class="lab">TX commit</span></div>
+      <div class="node c-emerald"><h5>Stock Deducted</h5><span>ledger movement</span></div>
+    </div>
+    <div class="branch">
+      <div class="node c-amber"><h5>💵 COD</h5><span>order confirmed immediately</span></div>
+      <div class="node c-amber"><h5>💳 Razorpay</h5><span>create payment intent → UPI/card</span></div>
+    </div>
+    <div class="flow-row" style="margin-top:14px;">
+      <div class="arrow" style="transform:scaleX(-1)">←<span class="lab">webhook</span></div>
+      <div class="node c-violet"><h5>Payment Confirmed</h5><span>signature verified</span></div>
+      <div class="arrow">→<span class="lab"></span></div>
+      <div class="node c-emerald"><h5>Order Confirmed</h5><span>email + WhatsApp notification</span></div>
+      <div class="arrow">→<span class="lab"></span></div>
+      <div class="node c-violet"><h5>🚚 Shipment Created</h5><span>Shiprocket API → AWB + label</span></div>
+      <div class="arrow">→<span class="lab">webhook events</span></div>
+      <div class="node c-emerald"><h5>Delivered</h5><span>order status closed</span></div>
+    </div>
+  </div>
+  <div class="note">⚡ Every order also triggers: GST invoice generation (auto, series per tenant+F.Y.) + invoice email. Returns path: return request → approve → credit note + Razorpay refund.</div>
+
+  <div class="sect-label">Order Status Machine</div>
+  <div class="flow">
+    <div class="flow-row">
+      <div class="node"><h5>pending</h5><span>created, unpaid</span></div>
+      <div class="arrow">→</div>
+      <div class="node"><h5>confirmed</h5><span>paid / COD</span></div>
+      <div class="arrow">→</div>
+      <div class="node"><h5>packed</h5><span>seller action</span></div>
+      <div class="arrow">→</div>
+      <div class="node"><h5>shipped</h5><span>AWB assigned</span></div>
+      <div class="arrow">→</div>
+      <div class="node c-emerald"><h5>delivered</h5><span>webhook event</span></div>
+      <div class="arrow">→</div>
+      <div class="node c-rose"><h5>cancelled / RTO / returned</h5><span>credit note paths</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ VIEW 3: GST FLOW ══════════════ -->
+<div class="view" id="v3">
+  <div class="sect-label">GST Engine (India) — the core differentiator</div>
+  <div class="flow">
+    <div class="flow-row">
+      <div class="node c-emerald"><h5>Product has HSN</h5><span>seller sets at product creation</span></div>
+      <div class="arrow">→<span class="lab">lookup</span></div>
+      <div class="node c-emerald"><h5>Tax Rate Master</h5><span>HSN → CGST% SGST% IGST% cess</span></div>
+      <div class="arrow">→<span class="lab"></span></div>
+      <div class="node c-amber"><h5>Ship-to State?</h5><span>from order address</span></div>
+      <div class="arrow">→<span class="lab">same state?</span></div>
+      <div class="node c-amber"><h5>CGST + SGST</h5><span>intra-state (split)</span></div>
+    </div>
+    <div class="branch" style="padding-left:150px;">
+      <div class="node c-violet"><h5>IGST</h5><span>inter-state (full)</span></div>
+    </div>
+    <div class="flow-row" style="margin-top:14px;">
+      <div class="node c-cyan"><h5>Invoice # Series</h5><span>ABC/24-25/0001 per tenant+F.Y.</span></div>
+      <div class="arrow">→</div>
+      <div class="node c-cyan"><h5>Tax Invoice PDF</h5><span>mandatory fields: HSN, breakup, GSTIN</span></div>
+      <div class="arrow">→</div>
+      <div class="node c-violet"><h5>E-Invoice JSON</h5><span>IRP → IRN + QR (sandbox first)</span></div>
+    </div>
+  </div>
+
+  <div class="sect-label">GST Reports</div>
+  <div class="grid">
+    <div class="card"><span class="ico">📊</span><h4>GSTR-1</h4><p>Outward supplies — B2B (GSTIN-wise), B2C (state-wise), HSN summary. CSV/PDF export for filing.</p></div>
+    <div class="card"><span class="ico">📊</span><h4>GSTR-3B</h4><p>Monthly summary — outward taxable, ITC, net tax payable per CGST/SGST/IGST.</p></div>
+    <div class="card"><span class="ico">🧾</span><h4>Credit / Debit Notes</h4><p>Returns reduce output tax — linked to original invoice, own series.</p></div>
+    <div class="card"><span class="ico">🏢</span><h4>B2B vs B2C</h4><p>Customer GSTIN captured at checkout → correct invoice classification.</p></div>
+  </div>
+  <div class="note">📌 GSTIN validation: 15-char format + checksum — FREE, no paid API. Rate changes = DB update, no redeploy. OTP via WhatsApp bridge (free).</div>
+</div>
+
+<!-- ══════════════ VIEW 4: LOGISTICS FLOW ══════════════ -->
+<div class="view" id="v4">
+  <div class="sect-label">Shiprocket Integration</div>
+  <div class="flow">
+    <div class="flow-row">
+      <div class="node c-cyan"><h5>Order Confirmed</h5><span>seller clicks "Ship"</span></div>
+      <div class="arrow">→<span class="lab">POST /shipments</span></div>
+      <div class="node c-emerald"><h5>Shiprocket API</h5><span>pickup addr (tenant config) + items + COD flag</span></div>
+      <div class="arrow">→<span class="lab">response</span></div>
+      <div class="node c-violet"><h5>AWB + Tracking URL</h5><span>stored on shipment</span></div>
+    </div>
+    <div class="flow-row" style="margin-top:14px;">
+      <div class="node c-amber"><h5>📡 Webhook</h5><span>POST /webhooks/shiprocket</span></div>
+      <div class="arrow">→<span class="lab">verify + store</span></div>
+      <div class="node c-emerald"><h5>Shipment Events</h5><span>manifest → picked → in_transit → out_for_delivery</span></div>
+      <div class="arrow">→<span class="lab"></span></div>
+      <div class="node c-emerald"><h5>Order Status Sync</h5><span>delivered → order closed</span></div>
+      <div class="arrow">→<span class="lab"></span></div>
+      <div class="node c-cyan"><h5>Customer Tracking</h5><span>timeline on /order/[id]/track</span></div>
+    </div>
+  </div>
+  <div class="note">🚚 Alternates: Delhivery, Dunzo, XpressBees. Shiprocket recommended — one API for all Indian couriers + COD + RTO handling.</div>
+</div>
+
+<!-- ══════════════ VIEW 5: ARCHITECTURE ══════════════ -->
+<div class="view" id="v5">
+  <div class="arch">
+    <div class="layer l-front">
+      <h3>🖥️ Frontend (Next.js 16 — per tenant, white-label)</h3>
+      <div class="arch-grid">
+        <div class="arch-item"><span class="ai">🏬</span><b>Storefront</b><span>apps/storefront · :3000</span></div>
+        <div class="arch-item"><span class="ai">🛠️</span><b>Admin</b><span>apps/admin · :3100</span></div>
+        <div class="arch-item"><span class="ai">🎨</span><b>Theme Engine</b><span>CSS vars from TenantConfig</span></div>
+        <div class="arch-item"><span class="ai">🎨</span><b>ui-ux-pro-max</b><span>design system</span></div>
+      </div>
+    </div>
+    <div class="layer l-back">
+      <h3>⚙️ Backend (NestJS — single API, tenant-scoped)</h3>
+      <div class="arch-grid">
+        <div class="arch-item"><span class="ai">🔐</span><b>Auth</b><span>OTP + JWT (tenant_id)</span></div>
+        <div class="arch-item"><span class="ai">📦</span><b>Catalog</b><span>products/variants</span></div>
+        <div class="arch-item"><span class="ai">🏭</span><b>Inventory</b><span>ledger + locking</span></div>
+        <div class="arch-item"><span class="ai">🛒</span><b>Cart</b><span>Redis-backed</span></div>
+        <div class="arch-item"><span class="ai">📋</span><b>Orders</b><span>TX + status machine</span></div>
+        <div class="arch-item"><span class="ai">🧾</span><b>GST Engine</b><span>HSN, tax calc, invoices</span></div>
+        <div class="arch-item"><span class="ai">💳</span><b>Payments</b><span>Razorpay</span></div>
+        <div class="arch-item"><span class="ai">🚚</span><b>Logistics</b><span>Shiprocket + webhooks</span></div>
+        <div class="arch-item"><span class="ai">📡</span><b>Webhooks</b><span>razorpay + shiprocket</span></div>
+        <div class="arch-item"><span class="ai">🔁</span><b>Jobs</b><span>BullMQ (invoices, emails)</span></div>
+      </div>
+    </div>
+    <div class="layer l-data">
+      <h3>🗄️ Data (PostgreSQL 16 — schema per tenant)</h3>
+      <div class="arch-grid">
+        <div class="arch-item"><span class="ai">🗃️</span><b>Admin DB</b><span>registry: tenants, plans, billing</span></div>
+        <div class="arch-item"><span class="ai">🏬</span><b>Tenant DB ×N</b><span>schema-per-tenant: catalog, orders, GST</span></div>
+        <div class="arch-item"><span class="ai">⚡</span><b>Redis</b><span>cart, sessions, queue</span></div>
+      </div>
+    </div>
+    <div class="layer l-ext">
+      <h3>🌐 External Services</h3>
+      <div class="arch-grid">
+        <div class="arch-item"><span class="ai">💳</span><b>Razorpay</b><span>payments + subscriptions</span></div>
+        <div class="arch-item"><span class="ai">🚚</span><b>Shiprocket</b><span>couriers, AWB, tracking</span></div>
+        <div class="arch-item"><span class="ai">🧾</span><b>GSTN / IRP</b><span>e-invoice IRN (free, sandbox)</span></div>
+        <div class="arch-item"><span class="ai">✉️</span><b>SMTP / WhatsApp</b><span>notifications</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="legend">
+    <div class="item"><span class="dot" style="background:#22d3ee"></span>Frontend</div>
+    <div class="item"><span class="dot" style="background:#34d399"></span>Backend</div>
+    <div class="item"><span class="dot" style="background:#a78bfa"></span>Database</div>
+    <div class="item"><span class="dot" style="background:#fbbf24"></span>External</div>
+    <div class="item"><span class="dot" style="background:#fb7185"></span>Platform Admin</div>
+  </div>
+</div>
+
+<!-- ══════════════ VIEW 6: TENANT LIFECYCLE ══════════════ -->
+<div class="view" id="v6">
+  <div class="sect-label">How a seller (tenant) gets onboarded</div>
+  <div class="flow">
+    <div class="flow-row">
+      <div class="node c-rose"><h5>🏢 Platform Admin</h5><span>creates tenant + plan</span></div>
+      <div class="arrow">→<span class="lab">provision</span></div>
+      <div class="node c-emerald"><h5>Schema Created</h5><span>tenant_&lt;slug&gt; + migrations + seed</span></div>
+      <div class="arrow">→<span class="lab"></span></div>
+      <div class="node c-cyan"><h5>Admin User</h5><span>login sent via email/WhatsApp</span></div>
+    </div>
+    <div class="flow-row" style="margin-top:14px;">
+      <div class="node c-cyan"><h5>Seller Setup</h5><span>business name, GSTIN, pickup address, API keys</span></div>
+      <div class="arrow">→<span class="lab"></span></div>
+      <div class="node c-cyan"><h5>Theme & Config</h5><span>logo, colors, banner, payment toggles</span></div>
+      <div class="arrow">→<span class="lab"></span></div>
+      <div class="node c-emerald"><h5>Add Products</h5><span>HSN + price + stock</span></div>
+      <div class="arrow">→<span class="lab"></span></div>
+      <div class="node c-emerald"><h5>Go Live 🚀</h5><span>shop.theirbrand.com</span></div>
+    </div>
+  </div>
+  <div class="note">💡 Same codebase, one deploy — every tenant gets isolated DB + own branding + own keys. That's the SaaS.</div>
+
+  <div class="sect-label">Phase Build Order</div>
+  <div class="grid">
+    <div class="card"><span class="ico">0️⃣</span><h4>Phase 0 — Foundation</h4><p>Monorepo, infra, auth, branding engine</p><span class="tag t-cyan">3-4 days</span></div>
+    <div class="card"><span class="ico">1️⃣</span><h4>Phase 1 — Catalog</h4><p>Products, inventory ledger, cart</p><span class="tag t-cyan">4-5 days</span></div>
+    <div class="card"><span class="ico">2️⃣</span><h4>Phase 2 — GST ⭐</h4><p>HSN master, tax engine, invoices, e-invoice, reports</p><span class="tag t-emerald">6-8 days</span></div>
+    <div class="card"><span class="ico">3️⃣</span><h4>Phase 3 — Orders + Payments + Logistics</h4><p>Checkout, Razorpay, Shiprocket</p><span class="tag t-amber">5-6 days</span></div>
+    <div class="card"><span class="ico">4️⃣</span><h4>Phase 4 — Config & Polish</h4><p>Theme builder, white-label domains, UX</p><span class="tag t-violet">4-5 days</span></div>
+    <div class="card"><span class="ico">5️⃣</span><h4>Phase 5 — SaaS Admin</h4><p>Provisioning, subscriptions, platform dashboard</p><span class="tag t-rose">4-5 days</span></div>
+    <div class="card"><span class="ico">6️⃣</span><h4>Phase 6 — Harden & Deploy</h4><p>Security, tests, VPS deploy</p><span class="tag t-rose">4-5 days</span></div>
+  </div>
+</div>
+
+<footer>
+  <span>E-Commerce SaaS · GST India · Multi-tenant</span>
+  <span>Plan: .hermes/plans/2026-08-14_ecommerce-saas-gst-plan.md</span>
+</footer>
+
+</div>
+<script>
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById(t.dataset.v).classList.add('active');
+}));
+</script>
+</body>
+</html>
