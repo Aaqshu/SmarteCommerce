@@ -2,9 +2,11 @@
 
 import Link from 'next/link';
 import { useTenantConfig } from '@/app/providers';
+import { useCart } from '@/components/cart-context';
 
 export function Header() {
   const config = useTenantConfig();
+  const { totalItems } = useCart();
 
   return (
     <header className="border-b border-gray-200 dark:border-gray-800">
@@ -33,10 +35,18 @@ export function Header() {
           <div className="flex items-center gap-4">
             <Link
               href="/cart"
-              className="text-2xl hover:text-[var(--primary)] transition-colors"
-              aria-label="Cart"
+              className="relative text-2xl hover:text-[var(--primary)] transition-colors"
+              aria-label={`Cart, ${totalItems} item${totalItems === 1 ? '' : 's'}`}
             >
               🛒
+              {totalItems > 0 && (
+                <span
+                  data-testid="cart-badge"
+                  className="absolute -top-1.5 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[11px] font-bold text-white"
+                >
+                  {totalItems}
+                </span>
+              )}
             </Link>
           </div>
         </div>

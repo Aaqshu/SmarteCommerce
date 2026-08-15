@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { DEMO_PRODUCTS } from '@smartecommerce/shared/demo-data';
 import { formatINR, calculateGST } from '@/lib/utils';
+import { AddToCartButton } from '@/components/AddToCartButton';
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -129,9 +130,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
 
           <div className="flex gap-4">
-            <button className="btn-primary flex-1" disabled={product.stock === 0}>
-              {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
-            </button>
+            <AddToCartButton productId={product.id} stock={product.stock} />
             <button className="btn-secondary">
               ❤️ Wishlist
             </button>

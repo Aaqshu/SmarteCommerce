@@ -3,18 +3,17 @@
 import Link from 'next/link';
 import { DEMO_PRODUCTS } from '@smartecommerce/shared/demo-data';
 import { formatINR } from '@/lib/utils';
-
-// Mock cart items for demo
-const MOCK_CART_ITEMS = [
-  { productId: '1', quantity: 1 },
-  { productId: '2', quantity: 1 },
-];
+import { useCart } from '@/components/cart-context';
 
 export default function CartPage() {
-  const cartItems = MOCK_CART_ITEMS.map((item) => ({
-    ...item,
-    product: DEMO_PRODUCTS.find((p) => p.id === item.productId)!,
-  }));
+  const { items, updateQuantity, removeItem } = useCart();
+
+  const cartItems = items
+    .map((item) => ({
+      ...item,
+      product: DEMO_PRODUCTS.find((p) => p.id === item.productId),
+    }))
+    .filter((item): item is typeof item & { product: NonNullable<typeof item.product> } => Boolean(item.product));
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -64,11 +63,33 @@ export default function CartPage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-md">
-                    <button className="px-3 py-1 hover:bg-gray-100 dark:hover:bg-gray-800">-</button>
-                    <span className="px-3">{item.quantity}</span>
-                    <button className="px-3 py-1 hover:bg-gray-100 dark:hover:bg-gray-800">+</button>
+                    <button
+                      type="button"
+                      aria-label={`Decrease quantity of ${item.product.name}`}
+                      className="px-3 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                      onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                    >
+                      -
+                    </button>
+                    <span className="px-3" data-testid={`qty-${item.productId}`}>
+                      {item.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={`Increase quantity of ${item.product.name}`}
+                      className="px-3 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                      onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                    >
+                      +
+                    </button>
                   </div>
-                  <button className="text-[var(--accent)] text-sm hover:underline">Remove</button>
+                  <button
+                    type="button"
+                    className="text-[var(--accent)] text-sm hover:underline cursor-pointer"
+                    onClick={() => removeItem(item.productId)}
+                  >
+                    Remove
+                  </button>
                 </div>
               </div>
               <div className="text-right">
