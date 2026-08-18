@@ -27,7 +27,7 @@ export function Footer() {
           <div>
             <h4 className="font-bold mb-4">Contact</h4>
             <p className="text-gray-600 dark:text-gray-400">
-              Email: info@aurellejewels.com<br />
+              Email: info@jainabjewellers.com<br />
               Phone: +91 98765 43210
             </p>
           </div>

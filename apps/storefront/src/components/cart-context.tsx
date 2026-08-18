@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { CartItem } from '@smartecommerce/shared/types';
 
-const STORAGE_KEY = 'aurelle_cart_v1';
+const STORAGE_KEY = 'jainab_cart_v1';
 
 interface CartContextValue {
   items: CartItem[];

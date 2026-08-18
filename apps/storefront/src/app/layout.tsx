@@ -6,7 +6,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'Aurelle Jewels - Timeless Luxury',
+  title: 'Jainab Jewellers - Timeless Luxury',
   description: 'Discover exquisite handcrafted jewellery. Premium gold, diamond, and precious stone collections.',
 };
 

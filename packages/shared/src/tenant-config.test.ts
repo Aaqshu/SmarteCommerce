@@ -13,8 +13,8 @@ describe('DEFAULT_JEWELLERY_CONFIG', () => {
     expect(DEFAULT_JEWELLERY_CONFIG).toHaveProperty('locale');
   });
 
-  it('has Aurelle Jewels branding', () => {
-    expect(DEFAULT_JEWELLERY_CONFIG.name).toBe('Aurelle Jewels');
+  it('has Jainab Jewellers branding', () => {
+    expect(DEFAULT_JEWELLERY_CONFIG.name).toBe('Jainab Jewellers');
     expect(DEFAULT_JEWELLERY_CONFIG.tagline).toBe('Timeless Luxury');
     expect(DEFAULT_JEWELLERY_CONFIG.logo).toBe('💎');
   });

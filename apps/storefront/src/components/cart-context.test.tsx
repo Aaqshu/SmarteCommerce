@@ -64,7 +64,7 @@ describe('CartContext', () => {
   it('persists to localStorage', () => {
     const { result } = renderHook(() => useCart(), { wrapper });
     act(() => result.current.addItem('p1'));
-    const stored = JSON.parse(window.localStorage.getItem('aurelle_cart_v1') ?? '[]');
+    const stored = JSON.parse(window.localStorage.getItem('jainab_cart_v1') ?? '[]');
     expect(stored).toEqual([{ productId: 'p1', quantity: 1 }]);
   });
 

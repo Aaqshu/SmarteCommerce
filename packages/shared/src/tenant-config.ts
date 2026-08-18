@@ -1,7 +1,7 @@
 import type { TenantConfig } from './types';
 
 export const DEFAULT_JEWELLERY_CONFIG: TenantConfig = {
-  name: 'Aurelle Jewels',
+  name: 'Jainab Jewellers',
   tagline: 'Timeless Luxury',
   logo: '💎',
   primaryColor: '#B8860B', // dark gold
