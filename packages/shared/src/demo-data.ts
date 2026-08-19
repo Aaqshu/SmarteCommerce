@@ -35,7 +35,7 @@ export const DEMO_PRODUCTS: Product[] = [
   {
     id: '1',
     slug: 'aurelle-22k-gold-ring',
-    name: 'Jainab 22K Gold Ring',
+    name: 'Zainab 22K Gold Ring',
     description: 'Exquisite handcrafted 22K gold ring with intricate traditional patterns. Perfect for weddings and special occasions.',
     price: 8500000, // ₹85,000 in paise
     mrp: 8500000,
@@ -275,7 +275,7 @@ export const DEMO_PRODUCTS: Product[] = [
         id: 'r14',
         customerName: 'Radha Krishna',
         rating: 5,
-        comment: 'Perfect for my wedding. Thank you Jainab Jewellers!',
+        comment: 'Perfect for my wedding. Thank you Zainab Jewellers!',
         createdAt: '2026-08-08T17:30:00Z',
       },
     ],

@@ -56,8 +56,32 @@ export function Footer() {
               Contact
             </h4>
             <div className="text-gray-600 dark:text-gray-400 text-sm space-y-2">
-              <p>Email: info@jainabjewellers.com</p>
-              <p>Phone: +91 98765 43210</p>
+              {config.ownerName && <p className="font-medium">Proprietor: {config.ownerName}</p>}
+              {config.phones?.map((phone) => (
+                <p key={phone}>
+                  <a
+                    href={`tel:+91${phone}`}
+                    className="hover:text-[var(--color-accent)] transition-colors duration-200"
+                  >
+                    📞 +91 {phone}
+                  </a>
+                </p>
+              ))}
+              {config.instagram && (
+                <p>
+                  <a
+                    href={`https://instagram.com/${config.instagram}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-[var(--color-accent)] transition-colors duration-200"
+                  >
+                    📷 @{config.instagram}
+                  </a>
+                </p>
+              )}
+              {config.address && (
+                <p className="leading-relaxed">📍 {config.address}</p>
+              )}
             </div>
           </div>
         </div>

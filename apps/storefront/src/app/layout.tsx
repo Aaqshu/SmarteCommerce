@@ -21,7 +21,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: 'Jainab Jewellers - Timeless Luxury',
+  title: 'Zainab Jewellers - Timeless Luxury',
   description: 'Discover exquisite handcrafted jewellery. Premium gold, diamond, and precious stone collections.',
 };
 

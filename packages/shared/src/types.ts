@@ -40,6 +40,10 @@ export interface TenantConfig {
   fontFamily: string;
   currency: string;
   locale: string;
+  ownerName?: string;
+  phones?: string[];
+  instagram?: string;
+  address?: string;
 }
 
 export interface Category {

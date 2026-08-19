@@ -42,7 +42,7 @@ export default function HomePage() {
             </span>
           </div>
           <h1 className="text-6xl md:text-7xl lg:text-8xl font-serif font-bold mb-6 text-[var(--color-primary)] dark:text-[var(--color-foreground)] tracking-tight leading-[0.95]">
-            Jainab Jewellers
+            Zainab Jewellers
           </h1>
           <p className="text-2xl md:text-3xl lg:text-4xl font-serif italic text-[var(--color-accent)] mb-8">
             Timeless Luxury
@@ -120,7 +120,7 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-20">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4 text-[var(--color-primary)] dark:text-[var(--color-foreground)]">
-            Why Choose Jainab Jewellers
+            Why Choose Zainab Jewellers
           </h2>
           <p className="text-gray-600 dark:text-gray-400">Commitment to excellence in every detail</p>
         </div>
