@@ -4,6 +4,8 @@
     "outDir": "./dist",
     "rootDir": "./",
     "module": "commonjs",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "types": ["node", "jest"]
   },
   "include": ["src/**/*", "test/**/*", "prisma/**/*"]
