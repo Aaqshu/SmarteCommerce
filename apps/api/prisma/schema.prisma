@@ -1,0 +1,93 @@
+// SmarteCommerce — multi-tenant e-commerce (India, GST)
+// Admin DB holds the tenant registry; each tenant gets its own schema (tenant_<slug>)
+// with the TenantSchema (below) applied.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("ADMIN_DATABASE_URL")
+}
+
+// ─── Admin registry (this database) ────────────────────────────────────────
+
+enum TenantStatus {
+  provisioning
+  active
+  suspended
+}
+
+enum PlanCode {
+  starter
+  pro
+  enterprise
+}
+
+model Tenants {
+  TenantId        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  TenantCode      String        @unique
+  BusinessName    String
+  Slug            String        @unique
+  OwnerName       String?
+  Email           String
+  Phone           String?
+  Status          TenantStatus  @default(provisioning)
+  Plan            PlanCode      @default(starter)
+  CustomDomain    String?
+  DatabaseName    String        @unique
+  CreatedOn       DateTime      @default(now())
+  UpdatedOn       DateTime      @updatedAt
+  TenantConfig    TenantConfig?
+
+  @@map("Tenants")
+}
+
+model TenantConfig {
+  TenantId     String   @id @db.Uuid
+  StoreName    String
+  Tagline      String?
+  LogoUrl      String?
+  PrimaryColor String   @default("#B8860B")
+  AccentColor  String   @default("#8B0000")
+  FontFamily   String   @default("Georgia, serif")
+  HeroBanner   Json?
+  ShowGstIncl  Boolean  @default(true)
+  CodEnabled   Boolean  @default(true)
+  RazorpayKeys Json?
+  ShiprocketKeys Json?
+  UpdatedOn    DateTime @updatedAt
+  Tenant       Tenants  @relation(fields: [TenantId], references: [TenantId], onDelete: Cascade)
+
+  @@map("TenantConfig")
+}
+
+enum UserRole {
+  platform_admin
+  tenant_admin
+  customer
+}
+
+model AdminUsers {
+  UserId      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  TenantId    String?  @db.Uuid
+  Role        UserRole @default(customer)
+  Phone       String?
+  Email       String?
+  Password    String?
+  FirstName   String?
+  LastName    String?
+  Status      String   @default("active")
+  CreatedOn   DateTime @default(now())
+
+  @@index([TenantId])
+  @@map("AdminUsers")
+}
+
+// ─── Tenant schema template (applied per tenant via migration runner) ───────
+// The following models are created inside each tenant_<slug> schema:
+//   Users, UserProfiles, Products, Categories, Brands, ProductVariants,
+//   StockItems, StockMovements, Orders, OrderItems, Addresses, Invoices,
+//   TaxRates, Shipments, ShipmentEvents, WalletTransactions
+// Full tenant schema lives in packages/database/migrations/002_tenant_schema.sql
