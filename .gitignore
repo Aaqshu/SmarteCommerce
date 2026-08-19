@@ -1,9 +1,27 @@
-node_modules
-.next
-dist
-.turbo
+# deps
+node_modules/
+.pnpm-store/
+
+# builds
+dist/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+.turbo/
+
+# env
 .env
 .env.local
-coverage
+.env.*.local
+
+# logs
 *.log
+npm-debug.log*
+
+# os
 .DS_Store
+
+# editors
+.idea/
+.vscode/
