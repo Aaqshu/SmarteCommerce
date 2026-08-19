@@ -6,6 +6,18 @@ import { DEMO_PRODUCTS } from '@smartecommerce/shared/demo-data';
 import { formatINR } from '@/lib/utils';
 import { useCart } from '@/components/cart-context';
 
+function CheckCircleIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+      />
+    </svg>
+  );
+}
+
 export default function CheckoutPage() {
   const { items, totalItems, subtotal: _subtotal, clearCart } = useCart();
   const [customerType, setCustomerType] = useState<'B2C' | 'B2B'>('B2C');
@@ -71,26 +83,48 @@ export default function CheckoutPage() {
 
   if (placed) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <div className="text-6xl mb-4">✅</div>
-        <h1 className="text-3xl font-bold mb-4">Order Placed Successfully!</h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-2">
-          Your order <span className="font-bold text-[var(--primary)]">{orderNumber}</span> has been confirmed.
+      <div className="container mx-auto px-4 py-24 text-center">
+        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 mb-8">
+          <CheckCircleIcon className="w-14 h-14 text-green-600 dark:text-green-500" />
+        </div>
+        <h1 className="text-4xl font-serif font-bold mb-6 text-[var(--color-primary)] dark:text-[var(--color-foreground)]">
+          Order Placed Successfully!
+        </h1>
+        <p className="text-lg text-gray-600 dark:text-gray-400 mb-3 max-w-2xl mx-auto">
+          Your order{' '}
+          <span className="font-bold text-[var(--color-accent)]">{orderNumber}</span> has been confirmed.
         </p>
-        <p className="text-gray-600 dark:text-gray-400 mb-8">
-          Payment method: <span className="font-semibold">{paymentMethod}</span> · Total:{' '}
-          <span className="font-semibold">{formatINR(placedTotal)}</span>
-        </p>
-        <Link href="/shop" className="btn-primary inline-block">
-          Continue Shopping
-        </Link>
+        <div className="elegant-card inline-block px-8 py-6 mb-10 text-left">
+          <div className="grid grid-cols-2 gap-6 text-sm">
+            <div>
+              <span className="text-gray-600 dark:text-gray-400">Payment method:</span>
+              <div className="font-semibold text-[var(--color-foreground)] mt-1">{paymentMethod}</div>
+            </div>
+            <div>
+              <span className="text-gray-600 dark:text-gray-400">Total:</span>
+              <div className="font-serif font-bold text-xl text-[var(--color-accent)] mt-1">
+                {formatINR(placedTotal)}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="space-y-3">
+          <Link href="/shop" className="btn-primary inline-block">
+            Continue Shopping
+          </Link>
+          <p className="text-sm text-gray-500 dark:text-gray-500">
+            We'll send a confirmation email shortly
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8">Checkout</h1>
+    <div className="container mx-auto px-4 py-12">
+      <h1 className="text-5xl font-serif font-bold mb-12 text-[var(--color-primary)] dark:text-[var(--color-foreground)]">
+        Checkout
+      </h1>
 
       <form onSubmit={handlePlaceOrder}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

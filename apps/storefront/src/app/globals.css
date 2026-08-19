@@ -2,32 +2,109 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Liquid Glass - Luxury Jewellery Design System */
 :root {
-  --primary: #b8860b;
-  --accent: #8b0000;
-  --brand-font: Georgia, serif;
+  /* Colors - Deep Charcoal + Gold Accent + Ivory */
+  --color-primary: #1C1917;
+  --color-on-primary: #FFFFFF;
+  --color-secondary: #44403C;
+  --color-accent: #A16207;
+  --color-background: #FAFAF9;
+  --color-foreground: #0C0A09;
+  --color-muted: #E8ECF0;
+  --color-border: #D6D3D1;
+  --color-destructive: #DC2626;
+  --color-ring: #1C1917;
+
+  /* Legacy vars (mapped to new system for compatibility) */
+  --primary: #A16207;
+  --accent: #1C1917;
+  --brand-font: 'Cormorant', Georgia, serif;
+
+  /* Spacing scale */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+  --space-2xl: 4rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --primary: #daa520;
-    --accent: #dc143c;
+    --color-background: #0C0A09;
+    --color-foreground: #FAFAF9;
+    --color-muted: #292524;
+    --color-border: #44403C;
+    --color-accent: #CA8A04;
+    --primary: #CA8A04;
+    --accent: #FAFAF9;
   }
 }
 
 body {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  letter-spacing: 0.01em;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--brand-font);
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .btn-primary {
-  @apply bg-[var(--primary)] text-white px-6 py-3 rounded-md hover:opacity-90 transition-opacity;
+  @apply bg-[var(--color-accent)] text-white px-8 py-4 rounded-sm font-medium tracking-wide;
+  @apply hover:bg-opacity-90 active:scale-[0.98] transition-all duration-200;
+  @apply shadow-lg hover:shadow-xl;
 }
 
 .btn-secondary {
-  @apply bg-[var(--accent)] text-white px-6 py-3 rounded-md hover:opacity-90 transition-opacity;
+  @apply bg-[var(--color-primary)] text-white px-8 py-4 rounded-sm font-medium tracking-wide;
+  @apply hover:bg-opacity-90 active:scale-[0.98] transition-all duration-200;
+  @apply border border-[var(--color-border)];
+}
+
+/* Glass effect utilities */
+.glass-effect {
+  backdrop-filter: blur(12px) saturate(180%);
+  background-color: rgba(250, 250, 249, 0.75);
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass-effect {
+    background-color: rgba(12, 10, 9, 0.75);
+  }
+}
+
+.elegant-card {
+  @apply bg-white dark:bg-[#1C1917] rounded-sm shadow-md hover:shadow-2xl;
+  @apply transition-all duration-300 ease-out;
+  @apply border border-[var(--color-border)];
+}
+
+.elegant-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Smooth animations */
+@media (prefers-reduced-motion: no-preference) {
+  .fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }

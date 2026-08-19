@@ -5,6 +5,30 @@ import { DEMO_PRODUCTS } from '@smartecommerce/shared/demo-data';
 import { formatINR } from '@/lib/utils';
 import { useCart } from '@/components/cart-context';
 
+function ShoppingBagIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+      />
+    </svg>
+  );
+}
+
+function TrashIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+      />
+    </svg>
+  );
+}
+
 export default function CartPage() {
   const { items, updateQuantity, removeItem } = useCart();
 
@@ -20,10 +44,14 @@ export default function CartPage() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <div className="text-6xl mb-4">🛒</div>
-        <h1 className="text-3xl font-bold mb-4">Your cart is empty</h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-8">
+      <div className="container mx-auto px-4 py-24 text-center">
+        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-amber-100 to-stone-100 dark:from-stone-800 dark:to-stone-900 mb-8">
+          <ShoppingBagIcon className="w-12 h-12 text-[var(--color-accent)]" />
+        </div>
+        <h1 className="text-4xl font-serif font-bold mb-4 text-[var(--color-primary)] dark:text-[var(--color-foreground)]">
+          Your cart is empty
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
           Add some beautiful jewellery to your cart!
         </p>
         <Link href="/shop" className="btn-primary inline-block">
@@ -34,50 +62,52 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8">Shopping Cart</h1>
+    <div className="container mx-auto px-4 py-12">
+      <h1 className="text-5xl font-serif font-bold mb-12 text-[var(--color-primary)] dark:text-[var(--color-foreground)]">
+        Shopping Cart
+      </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart Items */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-6">
           {cartItems.map((item) => (
-            <div
-              key={item.productId}
-              className="bg-white dark:bg-gray-900 rounded-lg p-6 shadow-md flex gap-6"
-            >
-              <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden shrink-0">
+            <div key={item.productId} className="elegant-card p-6 flex flex-col sm:flex-row gap-6">
+              <div className="w-full sm:w-28 h-28 bg-gradient-to-br from-stone-100 to-amber-50 dark:from-stone-800 dark:to-stone-900 rounded-sm overflow-hidden shrink-0">
                 <img
                   src={item.product.images[0]}
                   alt={item.product.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                 />
               </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-lg mb-2">
-                  <Link href={`/product/${item.product.slug}`} className="hover:text-[var(--primary)]">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-serif font-bold text-lg mb-2">
+                  <Link
+                    href={`/product/${item.product.slug}`}
+                    className="hover:text-[var(--color-accent)] transition-colors"
+                  >
                     {item.product.name}
                   </Link>
                 </h3>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                   {item.product.category} • {item.product.metal}
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-md">
+                  <div className="flex items-center gap-0 border border-[var(--color-border)] rounded-sm overflow-hidden">
                     <button
                       type="button"
                       aria-label={`Decrease quantity of ${item.product.name}`}
-                      className="px-3 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                      className="px-4 py-2 hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer transition-colors"
                       onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                     >
-                      -
+                      −
                     </button>
-                    <span className="px-3" data-testid={`qty-${item.productId}`}>
+                    <span className="px-4 py-2 min-w-[3rem] text-center font-medium" data-testid={`qty-${item.productId}`}>
                       {item.quantity}
                     </span>
                     <button
                       type="button"
                       aria-label={`Increase quantity of ${item.product.name}`}
-                      className="px-3 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                      className="px-4 py-2 hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer transition-colors"
                       onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                     >
                       +
@@ -85,15 +115,16 @@ export default function CartPage() {
                   </div>
                   <button
                     type="button"
-                    className="text-[var(--accent)] text-sm hover:underline cursor-pointer"
+                    className="text-[var(--color-accent)] text-sm hover:underline cursor-pointer font-medium flex items-center gap-2 group"
                     onClick={() => removeItem(item.productId)}
                   >
+                    <TrashIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     Remove
                   </button>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-xl font-bold text-[var(--primary)]">
+              <div className="text-right sm:text-right flex sm:flex-col items-center sm:items-end justify-between sm:justify-start">
+                <div className="text-2xl font-serif font-bold text-[var(--color-accent)]">
                   {formatINR(item.product.price * item.quantity)}
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400">incl. GST</div>
@@ -104,33 +135,37 @@ export default function CartPage() {
 
         {/* Cart Summary */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 shadow-md sticky top-4">
-            <h2 className="font-bold text-2xl mb-6">Order Summary</h2>
-            <div className="space-y-3 mb-6">
-              <div className="flex justify-between">
+          <div className="elegant-card p-8 sticky top-24">
+            <h2 className="font-serif font-bold text-2xl mb-8 text-[var(--color-primary)] dark:text-[var(--color-foreground)]">
+              Order Summary
+            </h2>
+            <div className="space-y-4 mb-8">
+              <div className="flex justify-between text-sm">
                 <span className="text-gray-600 dark:text-gray-400">Items ({totalItems}):</span>
-                <span className="font-semibold">{formatINR(subtotal)}</span>
+                <span className="font-semibold text-[var(--color-foreground)]">{formatINR(subtotal)}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-sm">
                 <span className="text-gray-600 dark:text-gray-400">Shipping:</span>
-                <span className="font-semibold text-green-600">FREE</span>
+                <span className="font-semibold text-green-600 dark:text-green-500">FREE</span>
               </div>
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+              <div className="border-t border-[var(--color-border)] pt-4 mt-4">
                 <div className="flex justify-between text-lg">
-                  <span className="font-bold">Total:</span>
-                  <span className="font-bold text-[var(--primary)]">{formatINR(subtotal)}</span>
+                  <span className="font-serif font-bold">Total:</span>
+                  <span className="font-serif font-bold text-2xl text-[var(--color-accent)]">
+                    {formatINR(subtotal)}
+                  </span>
                 </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 text-right mt-1">
+                <div className="text-xs text-gray-600 dark:text-gray-400 text-right mt-2">
                   (inclusive of all taxes)
                 </div>
               </div>
             </div>
-            <Link href="/checkout" className="btn-primary block text-center w-full">
+            <Link href="/checkout" className="btn-primary block text-center w-full mb-4">
               Proceed to Checkout
             </Link>
             <Link
               href="/shop"
-              className="block text-center mt-4 text-[var(--accent)] hover:underline"
+              className="block text-center text-sm text-[var(--color-accent)] hover:underline font-medium"
             >
               Continue Shopping
             </Link>
