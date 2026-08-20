@@ -8,7 +8,7 @@
     "start": "node dist/apps/api/src/main.js",
     "typecheck": "tsc --noEmit",
     "test": "jest --passWithNoTests",
-    "test:e2e": "jest --config test/jest-e2e.json --runInBand",
+    "test:e2e": "jest --config test/jest-e2e.json --runInBand --forceExit",
     "lint": "eslint \"src/**/*.ts\"",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
