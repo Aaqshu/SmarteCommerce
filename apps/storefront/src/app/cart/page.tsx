@@ -33,18 +33,27 @@ function TrashIcon({ className }: { className?: string }) {
 }
 
 export default function CartPage() {
-  const { items, updateQuantity, removeItem } = useCart();
+  const { items, updateQuantity, removeItem, clearCart } = useCart();
   const [catalog, setCatalog] = useState<Product[] | null>(null);
 
   // Resolve product details from the live API (demo data as fallback)
   useEffect(() => {
     let mounted = true;
     fetchProducts().then((products) => {
-      if (mounted) setCatalog(products.length > 0 ? products : DEMO_PRODUCTS);
+      if (!mounted) return;
+      const resolved = products.length > 0 ? products : DEMO_PRODUCTS;
+      setCatalog(resolved);
+      // Prune orphaned items (product no longer in catalog) so badge & page agree
+      const validIds = new Set(resolved.map((p) => p.id));
+      const orphans = items.filter((i) => !validIds.has(i.productId));
+      if (orphans.length > 0) {
+        orphans.forEach((o) => removeItem(o.productId));
+      }
     });
     return () => {
       mounted = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const source = catalog ?? DEMO_PRODUCTS;
@@ -57,6 +66,16 @@ export default function CartPage() {
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Loading guard: don't flash "empty" while the catalog resolves
+  if (catalog === null && items.length > 0) {
+    return (
+      <div className="container mx-auto px-4 py-24 text-center">
+        <div className="animate-spin inline-block w-10 h-10 border-2 border-[var(--color-accent)] border-t-transparent rounded-full" />
+        <p className="mt-4 text-[var(--color-muted)]">Loading your cart…</p>
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
