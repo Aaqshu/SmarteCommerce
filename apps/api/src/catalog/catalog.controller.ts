@@ -1,9 +1,36 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { CatalogService, ListProductsQuery } from './catalog.service';
+import { CategoriesService } from './categories.service';
 
 @Controller('tenants/:tenantDbName/catalog')
 export class CatalogController {
-  constructor(private catalog: CatalogService) {}
+  constructor(
+    private catalog: CatalogService,
+    private categories: CategoriesService,
+  ) {}
+
+  @Get('categories')
+  listCategories(@Param('tenantDbName') tenantDbName: string) {
+    return this.categories.listCategories(tenantDbName);
+  }
+
+  @Post('categories')
+  createCategory(
+    @Param('tenantDbName') tenantDbName: string,
+    @Body() body: { name: string; slug: string; parentId?: string; sortOrder?: number },
+  ) {
+    return this.categories.createCategory(tenantDbName, body);
+  }
+
+  @Get('brands')
+  listBrands(@Param('tenantDbName') tenantDbName: string) {
+    return this.categories.listBrands(tenantDbName);
+  }
+
+  @Post('brands')
+  createBrand(@Param('tenantDbName') tenantDbName: string, @Body() body: { name: string }) {
+    return this.categories.createBrand(tenantDbName, body);
+  }
 
   @Get('products')
   list(@Param('tenantDbName') tenantDbName: string, @Query() query: ListProductsQuery) {

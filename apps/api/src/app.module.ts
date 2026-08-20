@@ -6,6 +6,7 @@ import { TenantDbService } from './tenancy/tenant-db.service';
 import { AuthModule } from './auth/auth.module';
 import { TenantsModule } from './tenants/tenants.module';
 import { CatalogModule } from './catalog/catalog.module';
+import { InventoryModule } from './inventory/inventory.module';
 import { HealthController } from './health/health.controller';
 
 @Module({
@@ -15,6 +16,7 @@ import { HealthController } from './health/health.controller';
     AuthModule,
     TenantsModule,
     CatalogModule,
+    InventoryModule,
   ],
   controllers: [HealthController],
   providers: [PrismaService, TenantDbService],
