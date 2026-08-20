@@ -10,6 +10,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { CartModule } from './cart/cart.module';
 import { GstModule } from './gst/gst.module';
 import { InvoiceModule } from './invoice/invoice.module';
+import { OrdersModule } from './orders/orders.module';
 import { HealthController } from './health/health.controller';
 
 @Module({
@@ -23,6 +24,7 @@ import { HealthController } from './health/health.controller';
     CartModule,
     GstModule,
     InvoiceModule,
+    OrdersModule,
   ],
   controllers: [HealthController],
   providers: [PrismaService, TenantDbService],
