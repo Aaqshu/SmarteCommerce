@@ -25,6 +25,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     sellingPrice: '',
     hsnCode: '',
     gstRate: '',
+    imageUrl: '',
     status: 'active',
   });
 
@@ -50,10 +51,11 @@ export default function EditProductPage({ params }: EditProductPageProps) {
       setFormData({
         name: found.name,
         description: found.description || '',
-        mrp: (found.mrp / 100).toFixed(2),
-        sellingPrice: (found.price / 100).toFixed(2),
+        mrp: found.mrp.toString(),
+        sellingPrice: found.price.toString(),
         hsnCode: found.hsnCode,
         gstRate: found.gstRate.toString(),
+        imageUrl: found.images[0] || '',
         status: 'active', // Default since API doesn't return status
       });
       setLoading(false);
@@ -69,16 +71,14 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     setError('');
 
     try {
-      const mrpPaise = Math.round(parseFloat(formData.mrp) * 100);
-      const sellingPricePaise = Math.round(parseFloat(formData.sellingPrice) * 100);
-
       await updateProduct(productId, {
         name: formData.name,
         description: formData.description || undefined,
-        mrp: mrpPaise,
-        sellingPrice: sellingPricePaise,
+        mrp: parseFloat(formData.mrp),
+        sellingPrice: parseFloat(formData.sellingPrice),
         hsnCode: formData.hsnCode,
         gstRate: parseFloat(formData.gstRate),
+        images: formData.imageUrl ? [formData.imageUrl] : [],
         status: formData.status,
       });
 
@@ -241,6 +241,24 @@ export default function EditProductPage({ params }: EditProductPageProps) {
                 className="w-full px-4 py-2 border border-[var(--color-border)] rounded bg-white dark:bg-stone-900 text-[var(--color-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
               />
             </div>
+          </div>
+
+          {/* Image URL */}
+          <div>
+            <label htmlFor="imageUrl" className="block text-sm font-semibold mb-2 text-[var(--color-foreground)]">
+              Product Image URL
+            </label>
+            <input
+              type="url"
+              id="imageUrl"
+              value={formData.imageUrl}
+              onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+              className="w-full px-4 py-2 border border-[var(--color-border)] rounded bg-white dark:bg-stone-900 text-[var(--color-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+              placeholder="https://example.com/ring.jpg"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Direct image URL (shows 💎 placeholder if empty)
+            </p>
           </div>
 
           {/* Status */}

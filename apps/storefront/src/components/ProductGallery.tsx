@@ -5,6 +5,14 @@ import { useState } from 'react';
 export function ProductGallery({ images, name }: { images: string[]; name: string }) {
   const [active, setActive] = useState(0);
 
+  if (!images || images.length === 0) {
+    return (
+      <div className="aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-stone-100 to-amber-50 dark:from-stone-800 dark:to-stone-900 flex items-center justify-center">
+        <span className="text-6xl">💎</span>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-stone-100 to-amber-50 dark:from-stone-800 dark:to-stone-900">

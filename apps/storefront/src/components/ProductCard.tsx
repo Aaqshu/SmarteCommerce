@@ -33,11 +33,18 @@ export function ProductCard({ product }: ProductCardProps) {
     <Link href={`/product/${product.slug}`} className="group block">
       <div className="elegant-card overflow-hidden">
         <div className="aspect-square bg-gradient-to-br from-stone-100 to-amber-50 dark:from-stone-800 dark:to-stone-900 overflow-hidden relative">
-          <img
-            src={product.images[0]}
-            alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-          />
+          {product.images[0] ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={product.images[0]}
+              alt={product.name}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-5xl">💎</span>
+            </div>
+          )}
           {product.featured && (
             <div className="absolute top-3 right-3 px-3 py-1 bg-[var(--color-accent)] text-white text-xs font-medium tracking-wider uppercase rounded-sm">
               Featured

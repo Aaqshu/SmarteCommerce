@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createProduct } from '@/lib/api';
+import { createProduct, setStock } from '@/lib/api';
 
 function slugify(text: string): string {
   return text
@@ -27,6 +27,8 @@ export default function NewProductPage() {
     sellingPrice: '',
     hsnCode: '7113',
     gstRate: '3',
+    quantity: '10',
+    imageUrl: '',
     status: 'active',
   });
 
@@ -45,19 +47,23 @@ export default function NewProductPage() {
     setError('');
 
     try {
-      const mrpPaise = Math.round(parseFloat(formData.mrp) * 100);
-      const sellingPricePaise = Math.round(parseFloat(formData.sellingPrice) * 100);
-
-      await createProduct({
+      const product = await createProduct({
         name: formData.name,
         slug: formData.slug,
-        mrp: mrpPaise,
-        sellingPrice: sellingPricePaise,
+        mrp: parseFloat(formData.mrp),
+        sellingPrice: parseFloat(formData.sellingPrice),
         hsnCode: formData.hsnCode,
         gstRate: parseFloat(formData.gstRate),
         description: formData.description || undefined,
+        images: formData.imageUrl ? [formData.imageUrl] : [],
         status: formData.status,
       });
+
+      // Create initial stock if quantity provided
+      const quantity = parseInt(formData.quantity, 10);
+      if (!Number.isNaN(quantity) && quantity > 0 && product.ProductId) {
+        await setStock(product.ProductId, quantity);
+      }
 
       router.push('/admin/products');
       router.refresh();
@@ -204,6 +210,45 @@ export default function NewProductPage() {
                 className="w-full px-4 py-2 border border-[var(--color-border)] rounded bg-white dark:bg-stone-900 text-[var(--color-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                 placeholder="3"
               />
+            </div>
+          </div>
+
+          {/* Quantity & Image */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="quantity" className="block text-sm font-semibold mb-2 text-[var(--color-foreground)]">
+                Quantity / Stock *
+              </label>
+              <input
+                type="number"
+                id="quantity"
+                value={formData.quantity}
+                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                required
+                min="0"
+                className="w-full px-4 py-2 border border-[var(--color-border)] rounded bg-white dark:bg-stone-900 text-[var(--color-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                placeholder="10"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Initial stock quantity for this product
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="imageUrl" className="block text-sm font-semibold mb-2 text-[var(--color-foreground)]">
+                Product Image URL
+              </label>
+              <input
+                type="url"
+                id="imageUrl"
+                value={formData.imageUrl}
+                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                className="w-full px-4 py-2 border border-[var(--color-border)] rounded bg-white dark:bg-stone-900 text-[var(--color-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                placeholder="https://example.com/ring.jpg"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Direct image URL (optional — shows 💎 placeholder if empty)
+              </p>
             </div>
           </div>
 

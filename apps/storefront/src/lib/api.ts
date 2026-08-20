@@ -131,6 +131,25 @@ export async function createProduct(data: {
 }
 
 /**
+ * Sets/creates stock for a product (admin) via the inventory receive endpoint.
+ */
+export async function setStock(productId: string, quantity: number): Promise<void> {
+  const response = await fetch(
+    `${API_BASE_URL}/tenants/${TENANT_DB_NAME}/inventory/products/${productId}/receive`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quantity }),
+    },
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Set stock failed: ${response.status} ${errorText}`);
+  }
+}
+
+/**
  * Updates an existing product (admin).
  */
 export async function updateProduct(
