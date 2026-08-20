@@ -12,14 +12,6 @@ function ShoppingBagIcon({ className }: { className?: string }) {
   );
 }
 
-function DiamondIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m9.813 5.146 9.027 3.99c.629.278.629 1.167 0 1.445l-9.027 3.99c-.377.167-.766.167-1.143 0L.643 10.581c-.629-.278-.629-1.167 0-1.445l9.027-3.99c.377-.167.766-.167 1.143 0ZM2.25 12l7.5 3.75m0 0 7.5-3.75m-7.5 3.75V21m9-4.313V9.75" />
-    </svg>
-  );
-}
-
 export function Header() {
   const config = useTenantConfig();
   const { totalItems } = useCart();
@@ -29,7 +21,12 @@ export function Header() {
       <div className="container mx-auto px-4 py-5">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <DiamondIcon className="w-8 h-8 text-[var(--color-accent)] group-hover:rotate-12 transition-transform duration-300" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/zainab-logo.png"
+              alt={`${config.name} logo`}
+              className="w-12 h-12 rounded-full object-cover ring-2 ring-[var(--color-accent)]/30 group-hover:scale-105 transition-transform duration-300"
+            />
             <div>
               <h1 className="text-2xl font-serif font-bold text-[var(--color-primary)] dark:text-[var(--color-accent)] tracking-tight">
                 {config.name}
