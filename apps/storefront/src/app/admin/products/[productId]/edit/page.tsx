@@ -51,8 +51,8 @@ export default function EditProductPage({ params }: EditProductPageProps) {
       setFormData({
         name: found.name,
         description: found.description || '',
-        mrp: found.mrp.toString(),
-        sellingPrice: found.price.toString(),
+        mrp: (found.mrp / 100).toString(),
+        sellingPrice: (found.price / 100).toString(),
         hsnCode: found.hsnCode,
         gstRate: found.gstRate.toString(),
         imageUrl: found.images[0] || '',
