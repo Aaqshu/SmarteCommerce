@@ -215,3 +215,13 @@ CREATE INDEX IF NOT EXISTS idx_products_cat ON "Products"("CategoryId");
 CREATE INDEX IF NOT EXISTS idx_stockmoves_product ON "StockMovements"("ProductId");
 CREATE INDEX IF NOT EXISTS idx_shipments_order ON "Shipments"("OrderId");
 CREATE INDEX IF NOT EXISTS idx_shipment_events_ship ON "ShipmentEvents"("ShipmentId");
+
+-- ─── Invoice Series (per financial year) ──────────────────────────
+CREATE TABLE IF NOT EXISTS "InvoiceSeries" (
+  "SeriesId"     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "FinancialYear" VARCHAR(9) NOT NULL,        -- e.g. 2025-26
+  "Prefix"       VARCHAR(20) NOT NULL,        -- e.g. ZJ
+  "LastNumber"   INT NOT NULL DEFAULT 0,
+  "UpdatedOn"    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE ("FinancialYear", "Prefix")
+);
