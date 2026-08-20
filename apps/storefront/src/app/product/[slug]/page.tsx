@@ -4,6 +4,7 @@ import { DEMO_PRODUCTS } from '@smartecommerce/shared/demo-data';
 import { formatINR, calculateGST } from '@/lib/utils';
 import { AddToCartButton } from '@/components/AddToCartButton';
 import { ProductGallery } from '@/components/ProductGallery';
+import { fetchProduct } from '@/lib/api';
 
 function HeartIcon({ className }: { className?: string }) {
   return (
@@ -47,7 +48,12 @@ export async function generateStaticParams() {
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = DEMO_PRODUCTS.find((p) => p.slug === slug);
+
+  // Try API first, fallback to DEMO_PRODUCTS
+  let product = await fetchProduct(slug);
+  if (!product) {
+    product = DEMO_PRODUCTS.find((p) => p.slug === slug) ?? null;
+  }
 
   if (!product) {
     notFound();

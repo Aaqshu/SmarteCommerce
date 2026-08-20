@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { DEMO_PRODUCTS, DEMO_CATEGORIES } from '@smartecommerce/shared/demo-data';
 import { ProductCard } from '@/components/ProductCard';
+import { fetchProducts } from '@/lib/api';
 
 function SparklesIcon({ className }: { className?: string }) {
   return (
@@ -26,8 +27,11 @@ function ShieldCheckIcon({ className }: { className?: string }) {
   );
 }
 
-export default function HomePage() {
-  const featuredProducts = DEMO_PRODUCTS.filter((p) => p.featured);
+export default async function HomePage() {
+  // Fetch from API with fallback to demo data
+  const apiProducts = await fetchProducts();
+  const allProducts = apiProducts.length > 0 ? apiProducts : DEMO_PRODUCTS;
+  const featuredProducts = allProducts.slice(0, 4); // First 4 as featured
 
   return (
     <div>

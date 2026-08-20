@@ -48,6 +48,14 @@ export function Footer() {
                   Checkout
                 </a>
               </li>
+              <li className="pt-2 border-t border-[var(--color-border)]">
+                <a
+                  href="/admin"
+                  className="hover:text-[var(--color-accent)] transition-colors duration-200 inline-block opacity-60"
+                >
+                  Admin
+                </a>
+              </li>
             </ul>
           </div>
 
