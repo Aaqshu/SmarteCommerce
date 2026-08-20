@@ -8,6 +8,7 @@ import { TenantsModule } from './tenants/tenants.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { CartModule } from './cart/cart.module';
+import { GstModule } from './gst/gst.module';
 import { HealthController } from './health/health.controller';
 
 @Module({
@@ -19,6 +20,7 @@ import { HealthController } from './health/health.controller';
     CatalogModule,
     InventoryModule,
     CartModule,
+    GstModule,
   ],
   controllers: [HealthController],
   providers: [PrismaService, TenantDbService],
