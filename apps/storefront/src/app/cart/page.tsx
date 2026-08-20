@@ -1,9 +1,12 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { DEMO_PRODUCTS } from '@smartecommerce/shared/demo-data';
 import { formatINR } from '@/lib/utils';
 import { useCart } from '@/components/cart-context';
+import { fetchProducts } from '@/lib/api';
+import type { Product } from '@smartecommerce/shared/types';
 
 function ShoppingBagIcon({ className }: { className?: string }) {
   return (
@@ -31,11 +34,24 @@ function TrashIcon({ className }: { className?: string }) {
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem } = useCart();
+  const [catalog, setCatalog] = useState<Product[] | null>(null);
 
+  // Resolve product details from the live API (demo data as fallback)
+  useEffect(() => {
+    let mounted = true;
+    fetchProducts().then((products) => {
+      if (mounted) setCatalog(products.length > 0 ? products : DEMO_PRODUCTS);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const source = catalog ?? DEMO_PRODUCTS;
   const cartItems = items
     .map((item) => ({
       ...item,
-      product: DEMO_PRODUCTS.find((p) => p.id === item.productId),
+      product: source.find((p) => p.id === item.productId),
     }))
     .filter((item): item is typeof item & { product: NonNullable<typeof item.product> } => Boolean(item.product));
 
