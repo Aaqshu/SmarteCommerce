@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { DEMO_PRODUCTS } from '@smartecommerce/shared/demo-data';
 import { formatINR, calculateGST } from '@/lib/utils';
 import { AddToCartButton } from '@/components/AddToCartButton';
+import { ProductGallery } from '@/components/ProductGallery';
 
 function HeartIcon({ className }: { className?: string }) {
   return (
@@ -74,27 +75,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         {/* Product Images */}
-        <div>
-          <div className="aspect-square bg-gradient-to-br from-stone-100 to-amber-50 dark:from-stone-800 dark:to-stone-900 rounded-sm overflow-hidden mb-4 border border-[var(--color-border)]">
-            <img
-              src={product.images[0]}
-              alt={product.name}
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-            />
-          </div>
-          {product.images.length > 1 && (
-            <div className="grid grid-cols-4 gap-3">
-              {product.images.map((img, idx) => (
-                <div
-                  key={idx}
-                  className="aspect-square bg-gradient-to-br from-stone-100 to-amber-50 dark:from-stone-800 dark:to-stone-900 rounded-sm overflow-hidden border border-[var(--color-border)] hover:border-[var(--color-accent)] transition-colors cursor-pointer"
-                >
-                  <img src={img} alt={`${product.name} ${idx + 1}`} className="w-full h-full object-cover" />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <ProductGallery images={product.images} name={product.name} />
 
         {/* Product Details */}
         <div>

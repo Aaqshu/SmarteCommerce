@@ -34,7 +34,7 @@ export const DEMO_CATEGORIES: Category[] = [
 export const DEMO_PRODUCTS: Product[] = [
   {
     id: '1',
-    slug: 'aurelle-22k-gold-ring',
+    slug: 'zainab-22k-gold-ring',
     name: 'Zainab 22K Gold Ring',
     description: 'Exquisite handcrafted 22K gold ring with intricate traditional patterns. Perfect for weddings and special occasions.',
     price: 8500000, // ₹85,000 in paise

@@ -18,11 +18,11 @@ export function AddToCartButton({ productId, stock }: { productId: string; stock
   return (
     <button
       type="button"
-      className="btn-primary flex-1"
+      className={`btn-primary flex-1 ${added ? 'opacity-90' : ''}`}
+      disabled={added}
       onClick={() => {
         addItem(productId);
         setAdded(true);
-        window.setTimeout(() => setAdded(false), 1500);
       }}
     >
       {added ? '✓ Added to Cart' : 'Add to Cart'}
