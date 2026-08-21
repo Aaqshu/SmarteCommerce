@@ -12,6 +12,7 @@ import { GstModule } from './gst/gst.module';
 import { InvoiceModule } from './invoice/invoice.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
+import { LogisticsModule } from './logistics/logistics.module';
 import { HealthController } from './health/health.controller';
 
 @Module({
@@ -27,6 +28,7 @@ import { HealthController } from './health/health.controller';
     InvoiceModule,
     OrdersModule,
     PaymentsModule,
+    LogisticsModule,
   ],
   controllers: [HealthController],
   providers: [PrismaService, TenantDbService],
