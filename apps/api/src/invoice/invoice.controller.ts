@@ -1,4 +1,5 @@
-import { Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Controller, Get, Header, NotFoundException, Param, Post, Query, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { InvoiceService } from './invoice.service';
 
 @Controller('tenants/:tenantDbName/invoices')
@@ -31,5 +32,15 @@ export class InvoiceController {
     @Query('month') month: string,
   ) {
     return this.invoices.gstr3b(tenantDbName, fy || '2025-26', month || String(new Date().getMonth() + 1).padStart(2, '0'));
+  }
+
+  @Get(':invoiceId/pdf')
+  @Header('Content-Type', 'application/pdf')
+  @Header('Content-Disposition', 'attachment; filename="invoice.pdf"')
+  async pdf(@Param('tenantDbName') tenantDbName: string, @Param('invoiceId') invoiceId: string, @Res() res: Response) {
+    const data = await this.invoices.getInvoice(tenantDbName, invoiceId);
+    if (!data) throw new NotFoundException('Invoice not found');
+    const buffer = await this.invoices.renderPdf(data);
+    res.send(buffer);
   }
 }

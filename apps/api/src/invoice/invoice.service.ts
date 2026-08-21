@@ -276,6 +276,111 @@ export class InvoiceService {
     };
   }
 
+  /** Fetches a single invoice by id (with order + items). */
+  async getInvoice(
+    tenantDbName: string,
+    invoiceId: string,
+  ): Promise<{ invoice: InvoiceRow; order: Record<string, unknown>; items: unknown[]; tenant: Record<string, unknown> } | null> {
+    const pool = this.pool(tenantDbName);
+    const { rows: invoices } = await pool.query(
+      `SELECT "InvoiceId", "InvoiceNo", "OrderId", "FinancialYear", "SellerGstin", "BuyerGstin", "InvoiceType", "EinvoiceJson"
+       FROM "Invoices" WHERE "InvoiceId" = $1`,
+      [invoiceId],
+    );
+    if (invoices.length === 0) return null;
+    const invoice = invoices[0];
+
+    const { rows: orders } = await pool.query(
+      `SELECT "OrderNumber", "TaxableValue", "Cgst", "Sgst", "Igst", "Cess", "GrandTotal", "GstType", "CustomerGstin", "Notes"
+       FROM "Orders" WHERE "OrderId" = $1`,
+      [invoice.OrderId],
+    );
+    const { rows: items } = await pool.query(
+      `SELECT "Name", "HsnCode", "GstRate", "Qty", "UnitPrice", "TaxableValue", "Cgst", "Sgst", "Igst", "Total"
+       FROM "OrderItems" WHERE "OrderId" = $1`,
+      [invoice.OrderId],
+    );
+    const { rows: tenants } = await pool.query(
+      `SELECT "StoreName", "Gstin", "Address", "StateCode" FROM "TenantConfig" LIMIT 1`,
+    );
+
+    return {
+      invoice,
+      order: orders[0] ?? {},
+      items,
+      tenant: tenants[0] ?? {},
+    };
+  }
+
+  /** Builds a GST tax invoice PDF (A4). */
+  async renderPdf(data: NonNullable<Awaited<ReturnType<InvoiceService['getInvoice']>>>): Promise<Buffer> {
+    // lazy require to keep import cost low
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const PDFDocument = require('pdfkit');
+    const doc = new PDFDocument({ size: 'A4', margin: 40 });
+    const chunks: Buffer[] = [];
+    doc.on('data', (c: Buffer) => chunks.push(c));
+    const done = new Promise<Buffer>((resolve) => {
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+    });
+
+    const { invoice, order, items, tenant } = data;
+    const fmt = (n: unknown) => Number(n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+
+    // Header
+    doc.fontSize(16).fillColor('#B8860B').text(String(tenant.StoreName ?? 'Store'), { align: 'left' });
+    doc.fontSize(10).fillColor('#333').text(String(tenant.Address ?? ''));
+    if (tenant.Gstin) doc.fontSize(9).fillColor('#666').text(`GSTIN: ${String(tenant.Gstin)}`);
+    doc.moveDown();
+
+    doc.fontSize(13).fillColor('#111').text('TAX INVOICE', { align: 'center' });
+    doc.fontSize(9).fillColor('#666').text(`Invoice No: ${invoice.InvoiceNo}   |   Type: ${invoice.InvoiceType}`, { align: 'center' });
+    doc.moveDown();
+
+    // Bill To
+    doc.fontSize(10).fillColor('#333').text(`Order: ${String(order.OrderNumber ?? '')}`);
+    if (order.CustomerGstin) doc.text(`Buyer GSTIN: ${String(order.CustomerGstin)}`);
+    doc.moveDown();
+
+    // Items table
+    const startY = doc.y;
+    doc.fontSize(8).fillColor('#B8860B');
+    doc.text('Item', 40, startY);
+    doc.text('HSN', 180, startY);
+    doc.text('Rate%', 230, startY);
+    doc.text('Qty', 275, startY);
+    doc.text('Unit', 315, startY);
+    doc.text('Taxable', 365, startY);
+    doc.text('GST', 425, startY);
+    doc.text('Total', 480, startY);
+
+    let y = startY + 14;
+    for (const it of items as Array<{ Name: string; HsnCode: string; GstRate: string; Qty: string; UnitPrice: string; TaxableValue: string; Cgst: string; Sgst: string; Igst: string; Total: string }>) {
+      doc.fontSize(8).fillColor('#333');
+      doc.text(String(it.Name).slice(0, 22), 40, y);
+      doc.text(String(it.HsnCode), 180, y);
+      doc.text(String(it.GstRate), 230, y);
+      doc.text(String(it.Qty), 275, y);
+      doc.text(fmt(it.UnitPrice), 315, y);
+      doc.text(fmt(it.TaxableValue), 365, y);
+      doc.text(fmt(Number(it.Cgst) + Number(it.Sgst) + Number(it.Igst)), 425, y);
+      doc.text(fmt(it.Total), 480, y);
+      y += 14;
+    }
+
+    // Totals
+    doc.moveDown();
+    doc.fontSize(10).fillColor('#111');
+    doc.text(`Taxable Value: ₹${fmt(order.TaxableValue ?? 0)}`);
+    doc.text(`CGST: ₹${fmt(order.Cgst ?? 0)}   SGST: ₹${fmt(order.Sgst ?? 0)}   IGST: ₹${fmt(order.Igst ?? 0)}`);
+    doc.fontSize(12).fillColor('#B8860B').text(`GRAND TOTAL: ₹${fmt(order.GrandTotal ?? 0)}`);
+    doc.moveDown();
+    if (order.Notes) doc.fontSize(9).fillColor('#666').text(`Notes: ${String(order.Notes)}`);
+
+    doc.end();
+    return done;
+  }
+
   /** Builds GSTN e-invoice JSON (schema v1.1, B2C default). */
   buildEinvoiceJson(input: {
     invoiceNo: string;
