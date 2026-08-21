@@ -242,4 +242,31 @@ export class OrdersService {
     );
     return rows;
   }
+
+  /** Lists ALL orders (admin) with optional status filter. */
+  async listAllOrders(tenantDbName: string, status?: string): Promise<OrderRow[]> {
+    const pool = this.pool(tenantDbName);
+    const where = status ? `WHERE "Status" = $1` : '';
+    const params = status ? [status] : [];
+    const { rows } = await pool.query(
+      `SELECT "OrderId", "OrderNumber", "UserId", "Status", "PaymentMethod", "PaymentStatus",
+              "TaxableValue", "Cgst", "Sgst", "Igst", "GrandTotal", "GstType", "CustomerGstin",
+              "Notes", "CreatedOn"
+       FROM "Orders" ${where} ORDER BY "CreatedOn" DESC LIMIT 200`,
+      params,
+    );
+    return rows;
+  }
+
+  /** Updates an order's status (admin). */
+  async updateOrderStatus(tenantDbName: string, orderId: string, status: string): Promise<OrderRow> {
+    const { rows } = await this.pool(tenantDbName).query(
+      `UPDATE "Orders" SET "Status" = $2, "UpdatedOn" = NOW()
+       WHERE "OrderId" = $1
+       RETURNING "OrderId", "OrderNumber", "Status", "PaymentMethod", "PaymentStatus", "GrandTotal", "GstType"`,
+      [orderId, status],
+    );
+    if (rows.length === 0) throw new NotFoundException('Order not found');
+    return rows[0];
+  }
 }
