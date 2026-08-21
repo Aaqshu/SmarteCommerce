@@ -152,9 +152,8 @@ export class OrdersService {
         ("OrderNumber", "UserId", "AddressId", "Status", "PaymentMethod", "PaymentStatus",
          "TaxableValue", "Cgst", "Sgst", "Igst", "Cess", "ShippingCharges", "RoundOff", "GrandTotal",
          "GstType", "CustomerGstin", "Notes")
-       VALUES ($1, $2, $3, 'confirmed', $4,
-               CASE WHEN $4 = 'cod' THEN 'unpaid' ELSE 'unpaid' END,
-               $5, $6, $7, $8, $9, 0, 0, $10, $11, $12, $13)
+       VALUES ($1, $2, $3, 'confirmed', $4, $5,
+               $6, $7, $8, $9, $10, 0, 0, $11, $12, $13, $14)
        RETURNING "OrderId", "OrderNumber", "TaxableValue", "Cgst", "Sgst", "Igst", "Cess",
                  "ShippingCharges", "RoundOff", "GrandTotal", "GstType", "Status"`,
       [
@@ -162,6 +161,7 @@ export class OrdersService {
         userId,
         input.addressId ?? null,
         input.paymentMethod,
+        'unpaid', // COD/razorpay both start unpaid; webhook flips to paid
         taxableValue,
         totalCgst,
         totalSgst,
