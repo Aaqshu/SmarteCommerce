@@ -58,6 +58,9 @@ export default async function AdminDashboard() {
           <Link href="/admin/products" className="btn-secondary">
             View All Products
           </Link>
+          <Link href="/admin/orders" className="btn-secondary">
+            View All Orders
+          </Link>
         </div>
       </div>
 

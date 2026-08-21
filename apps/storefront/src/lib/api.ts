@@ -293,3 +293,154 @@ export async function createPaymentOrder(orderId: string): Promise<string> {
   const data: ApiPaymentOrderResponse = await response.json();
   return data.razorpayOrderId;
 }
+
+// Admin Orders API
+
+interface ApiOrderRow {
+  OrderId: string;
+  OrderNumber: string;
+  UserId: string;
+  Status: string;
+  PaymentMethod: string;
+  PaymentStatus: string;
+  TaxableValue: string;
+  Cgst: string;
+  Sgst: string;
+  Igst: string;
+  GrandTotal: string;
+  GstType: string;
+  CustomerGstin: string | null;
+  Notes: string | null;
+  CreatedOn: string;
+}
+
+export interface Order {
+  orderId: string;
+  orderNumber: string;
+  userId: string;
+  status: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  taxableValue: number; // in paise
+  cgst: number; // in paise
+  sgst: number; // in paise
+  igst: number; // in paise
+  grandTotal: number; // in paise
+  gstType: string;
+  customerGstin: string | null;
+  notes: string | null;
+  createdOn: string;
+}
+
+/**
+ * Maps API PascalCase order row to camelCase Order type.
+ */
+function mapApiOrderToOrder(row: ApiOrderRow): Order {
+  return {
+    orderId: row.OrderId,
+    orderNumber: row.OrderNumber,
+    userId: row.UserId,
+    status: row.Status,
+    paymentMethod: row.PaymentMethod,
+    paymentStatus: row.PaymentStatus,
+    taxableValue: Math.round(parseFloat(row.TaxableValue) * 100),
+    cgst: Math.round(parseFloat(row.Cgst) * 100),
+    sgst: Math.round(parseFloat(row.Sgst) * 100),
+    igst: Math.round(parseFloat(row.Igst) * 100),
+    grandTotal: Math.round(parseFloat(row.GrandTotal) * 100),
+    gstType: row.GstType,
+    customerGstin: row.CustomerGstin,
+    notes: row.Notes,
+    createdOn: row.CreatedOn,
+  };
+}
+
+/**
+ * Fetches all orders (admin).
+ * Optional status filter: pending, confirmed, packed, shipped, delivered, cancelled, returned, rto
+ */
+export async function fetchOrders(status?: string): Promise<Order[]> {
+  try {
+    const url = status
+      ? `${API_BASE_URL}/tenants/${TENANT_DB_NAME}/orders?status=${encodeURIComponent(status)}`
+      : `${API_BASE_URL}/tenants/${TENANT_DB_NAME}/orders`;
+
+    const response = await fetch(url, {
+      cache: 'no-store', // Admin data should be fresh
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const rows: ApiOrderRow[] = await response.json();
+    return rows.map(mapApiOrderToOrder);
+  } catch (error) {
+    console.error('Failed to fetch orders from API:', error);
+    return [];
+  }
+}
+
+/**
+ * Updates order status (admin).
+ * PATCH /tenants/:tenant/orders/:orderId/status
+ */
+export async function updateOrderStatus(orderId: string, status: string): Promise<void> {
+  const response = await fetch(
+    `${API_BASE_URL}/tenants/${TENANT_DB_NAME}/orders/${orderId}/status`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Update order status failed: ${response.status} ${errorText}`);
+  }
+}
+
+interface ApiInvoiceResponse {
+  InvoiceId: string;
+  InvoiceNo: string;
+}
+
+export interface Invoice {
+  invoiceId: string;
+  invoiceNo: string;
+}
+
+/**
+ * Creates an invoice for an order (admin).
+ * POST /tenants/:tenant/invoices/orders/:orderId
+ */
+export async function createInvoiceForOrder(orderId: string): Promise<Invoice> {
+  const response = await fetch(
+    `${API_BASE_URL}/tenants/${TENANT_DB_NAME}/invoices/orders/${orderId}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Create invoice failed: ${response.status} ${errorText}`);
+  }
+
+  const data: ApiInvoiceResponse = await response.json();
+  return {
+    invoiceId: data.InvoiceId,
+    invoiceNo: data.InvoiceNo,
+  };
+}
+
+/**
+ * Opens the invoice PDF in a new window (admin).
+ * GET /tenants/:tenant/invoices/:invoiceId/pdf
+ */
+export function downloadInvoicePDF(invoiceId: string): void {
+  const url = `${API_BASE_URL}/tenants/${TENANT_DB_NAME}/invoices/${invoiceId}/pdf`;
+  window.open(url, '_blank');
+}
