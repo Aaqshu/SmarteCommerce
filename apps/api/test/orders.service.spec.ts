@@ -151,4 +151,45 @@ describe('OrdersService (unit, mocked deps)', () => {
       }),
     ).rejects.toThrow('Insufficient stock');
   });
+
+  it('creates a guest order by phone (auto user upsert)', async () => {
+    mockRedis.get.mockResolvedValueOnce(
+      JSON.stringify([{ productId: 'p1', quantity: 1, price: 85000, name: 'Zainab Ring' }]),
+    );
+    // user lookup by phone → not found
+    mockPool.query.mockResolvedValueOnce({ rows: [] });
+    // user insert
+    mockPool.query.mockResolvedValueOnce({ rows: [{ UserId: 'gu-1' }] });
+    // product lookup
+    mockPool.query.mockResolvedValueOnce({
+      rows: [{ ProductId: 'p1', HsnCode: '7113', GstRate: '3.00' }],
+    });
+    // insert order
+    mockPool.query.mockResolvedValueOnce({
+      rows: [{
+        OrderId: 'o4', OrderNumber: 'ORD-1004', TaxableValue: '85000.00',
+        Cgst: '1275.00', Sgst: '1275.00', Igst: '0', GrandTotal: '87550.00',
+        GstType: 'intra', Status: 'confirmed',
+      }],
+    });
+    // insert order item
+    mockPool.query.mockResolvedValueOnce({ rows: [] });
+    // deduct stock (client): BEGIN, SELECT, UPDATE, INSERT, COMMIT
+    mockClient.query.mockResolvedValueOnce({ rows: [] });
+    mockClient.query.mockResolvedValueOnce({ rows: [{ Quantity: '10' }] });
+    mockClient.query.mockResolvedValueOnce({ rows: [] });
+    mockClient.query.mockResolvedValueOnce({ rows: [] });
+    mockClient.query.mockResolvedValueOnce({ rows: [] });
+
+    const order = await service.createOrder('tenant_demo', 'cart-4', {
+      phone: '7007794906',
+      firstName: 'Anas',
+      paymentMethod: 'cod',
+      sellerState: 'UP',
+      buyerState: 'UP',
+    });
+
+    expect(order.OrderNumber).toBe('ORD-1004');
+    expect(mockRedis.del).toHaveBeenCalled();
+  });
 });

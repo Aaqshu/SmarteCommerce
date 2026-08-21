@@ -19,7 +19,10 @@ export interface OrderRow {
 }
 
 export interface CreateOrderInput {
-  userId: string;
+  userId?: string;
+  phone?: string;
+  email?: string;
+  firstName?: string;
   paymentMethod: 'cod' | 'razorpay';
   sellerState: string;
   buyerState: string;
@@ -40,12 +43,53 @@ export class OrdersService {
     return this.tenantDb.getDb(tenantDbName);
   }
 
+  /** Finds-or-creates a user row (guest checkout). */
+  private async resolveUser(
+    tenantDbName: string,
+    input: CreateOrderInput,
+  ): Promise<string> {
+    if (input.userId) return input.userId;
+
+    const pool = this.pool(tenantDbName);
+    if (input.phone) {
+      const { rows } = await pool.query(
+        `SELECT "UserId" FROM "Users" WHERE "Phone" = $1`,
+        [input.phone],
+      );
+      if (rows.length > 0) return rows[0].UserId;
+      const { rows: created } = await pool.query(
+        `INSERT INTO "Users" ("Phone", "FirstName", "Status")
+         VALUES ($1, $2, 'active')
+         RETURNING "UserId"`,
+        [input.phone, input.firstName ?? null],
+      );
+      return created[0].UserId;
+    }
+    if (input.email) {
+      const { rows } = await pool.query(
+        `SELECT "UserId" FROM "Users" WHERE "Email" = $1`,
+        [input.email],
+      );
+      if (rows.length > 0) return rows[0].UserId;
+      const { rows: created } = await pool.query(
+        `INSERT INTO "Users" ("Email", "FirstName", "Status")
+         VALUES ($1, $2, 'active')
+         RETURNING "UserId"`,
+        [input.email, input.firstName ?? null],
+      );
+      return created[0].UserId;
+    }
+    throw new BadRequestException('userId or phone/email required');
+  }
+
   /** Creates an order from the Redis cart, applying GST + deducting stock. */
   async createOrder(tenantDbName: string, cartId: string, input: CreateOrderInput): Promise<OrderRow> {
     const pool = this.pool(tenantDbName);
     const cart = await this.cart.getCart(cartId);
 
     if (cart.items.length === 0) throw new BadRequestException('Cart is empty');
+
+    const userId = await this.resolveUser(tenantDbName, input);
 
     // Resolve product tax metadata
     const ids = cart.items.map((i) => i.productId);
@@ -115,7 +159,7 @@ export class OrdersService {
                  "ShippingCharges", "RoundOff", "GrandTotal", "GstType", "Status"`,
       [
         orderNumber,
-        input.userId,
+        userId,
         input.addressId ?? null,
         input.paymentMethod,
         taxableValue,
