@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { fetchProducts, updateProduct } from '@/lib/api';
+import { fetchCategories, fetchProducts, updateProduct } from '@/lib/api';
 import type { Product } from '@smartecommerce/shared/types';
 
 interface EditProductPageProps {
@@ -14,6 +14,8 @@ export default function EditProductPage({ params }: EditProductPageProps) {
   const router = useRouter();
   const [productId, setProductId] = useState<string>('');
   const [product, setProduct] = useState<Product | null>(null);
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [createdOn, setCreatedOn] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -26,12 +28,14 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     hsnCode: '',
     gstRate: '',
     imageUrl: '',
+    categoryId: '',
     status: 'active',
   });
 
   useEffect(() => {
     params.then(({ productId: id }) => {
       setProductId(id);
+      fetchCategories().then(setCategories).catch(() => {});
       loadProduct(id);
     });
   }, [params]);
@@ -56,8 +60,10 @@ export default function EditProductPage({ params }: EditProductPageProps) {
         hsnCode: found.hsnCode,
         gstRate: found.gstRate.toString(),
         imageUrl: found.images[0] || '',
-        status: 'active', // Default since API doesn't return status
+        categoryId: found.categoryId || '',
+        status: found.status || 'active',
       });
+      setCreatedOn(found.createdOn ?? null);
       setLoading(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load product');
@@ -79,6 +85,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
         hsnCode: formData.hsnCode,
         gstRate: parseFloat(formData.gstRate),
         images: formData.imageUrl ? [formData.imageUrl] : [],
+        categoryId: formData.categoryId || undefined,
         status: formData.status,
       });
 
@@ -208,6 +215,40 @@ export default function EditProductPage({ params }: EditProductPageProps) {
               />
             </div>
           </div>
+
+          {/* Category */}
+          <div>
+            <label htmlFor="categoryId" className="block text-sm font-semibold mb-2 text-[var(--color-foreground)]">
+              Category
+            </label>
+            <select
+              id="categoryId"
+              value={formData.categoryId}
+              onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+              className="w-full px-4 py-2 border border-[var(--color-border)] rounded bg-white dark:bg-stone-900 text-[var(--color-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+            >
+              <option value="">Uncategorized</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Added On */}
+          {createdOn && (
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-[var(--color-foreground)]">Added On</label>
+              <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 bg-stone-50 dark:bg-stone-900 rounded">
+                {new Date(createdOn).toLocaleDateString('en-IN', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </div>
+            </div>
+          )}
 
           {/* HSN & GST */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

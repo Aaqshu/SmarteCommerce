@@ -25,7 +25,7 @@ export interface ListProductsQuery {
 
 const PRODUCT_SELECT = `
   SELECT p."ProductId", p."Name", p."Slug", p."Description", p."HsnCode", p."GstRate",
-         p."Mrp", p."SellingPrice", p."Images", p."Status", p."CreatedOn",
+         p."Mrp", p."SellingPrice", p."Images", p."Status", p."CreatedOn", p."CategoryId",
          c."Name" AS "CategoryName", b."Name" AS "BrandName"
   FROM "Products" p
   LEFT JOIN "Categories" c ON c."CategoryId" = p."CategoryId"

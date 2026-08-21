@@ -15,6 +15,7 @@ interface ApiProductRow {
   Images?: unknown;
   Status: string;
   CreatedOn?: string | null;
+  CategoryId?: string | null;
   CategoryName?: string;
   BrandName?: string;
 }
@@ -48,7 +49,9 @@ function mapApiProductToProduct(row: ApiProductRow): Product {
     gstRate: parseFloat(row.GstRate),
     metal,
     category: row.CategoryName || 'Uncategorized',
+    categoryId: row.CategoryId ?? undefined,
     createdOn: row.CreatedOn ?? null,
+    status: row.Status ?? 'active',
     images,
     stock: 100, // Fallback — no inventory tracking yet
     reviews: [], // No reviews in API yet
@@ -130,6 +133,18 @@ export async function createProduct(data: {
   }
 
   return response.json();
+}
+
+/** Fetches product categories for the tenant. */
+export async function fetchCategories(): Promise<Array<{ id: string; name: string; slug: string }>> {
+  const response = await fetch(`${API_BASE_URL}/tenants/${TENANT_DB_NAME}/catalog/categories`);
+  if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
+  const rows = (await response.json()) as Array<{
+    CategoryId: string;
+    Name: string;
+    Slug: string;
+  }>;
+  return rows.map((r) => ({ id: r.CategoryId, name: r.Name, slug: r.Slug }));
 }
 
 /**

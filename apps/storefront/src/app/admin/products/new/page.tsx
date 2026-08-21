@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createProduct, setStock } from '@/lib/api';
+import { createProduct, fetchCategories, setStock } from '@/lib/api';
 
 function slugify(text: string): string {
   return text
@@ -18,6 +18,11 @@ export default function NewProductPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+
+  useEffect(() => {
+    fetchCategories().then(setCategories).catch(() => {});
+  }, []);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -29,6 +34,7 @@ export default function NewProductPage() {
     gstRate: '3',
     quantity: '10',
     imageUrl: '',
+    categoryId: '',
     status: 'active',
   });
 
@@ -56,6 +62,7 @@ export default function NewProductPage() {
         gstRate: parseFloat(formData.gstRate),
         description: formData.description || undefined,
         images: formData.imageUrl ? [formData.imageUrl] : [],
+        categoryId: formData.categoryId || undefined,
         status: formData.status,
       });
 
@@ -211,6 +218,26 @@ export default function NewProductPage() {
                 placeholder="3"
               />
             </div>
+          </div>
+
+          {/* Category */}
+          <div>
+            <label htmlFor="categoryId" className="block text-sm font-semibold mb-2 text-[var(--color-foreground)]">
+              Category
+            </label>
+            <select
+              id="categoryId"
+              value={formData.categoryId}
+              onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+              className="w-full px-4 py-2 border border-[var(--color-border)] rounded bg-white dark:bg-stone-900 text-[var(--color-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+            >
+              <option value="">Uncategorized</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Quantity & Image */}
