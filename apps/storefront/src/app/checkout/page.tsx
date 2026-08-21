@@ -5,8 +5,14 @@ import Link from 'next/link';
 import { DEMO_PRODUCTS } from '@smartecommerce/shared/demo-data';
 import { formatINR } from '@/lib/utils';
 import { useCart } from '@/components/cart-context';
-import { fetchProducts, createCart, placeOrder } from '@/lib/api';
+import { fetchProducts, createCart, placeOrder, createPaymentOrder } from '@/lib/api';
 import type { Product } from '@smartecommerce/shared/types';
+
+declare global {
+  interface Window {
+    Razorpay?: any;
+  }
+}
 
 function CheckCircleIcon({ className }: { className?: string }) {
   return (
@@ -23,13 +29,14 @@ function CheckCircleIcon({ className }: { className?: string }) {
 export default function CheckoutPage() {
   const { items, totalItems, subtotal: _subtotal, clearCart } = useCart();
   const [customerType, setCustomerType] = useState<'B2C' | 'B2B'>('B2C');
-  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'UPI' | 'Card'>('UPI');
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('online');
   const [error, setError] = useState('');
   const [placed, setPlaced] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
   const [placedTotal, setPlacedTotal] = useState(0);
   const [catalog, setCatalog] = useState<Product[] | null>(null);
   const [placing, setPlacing] = useState(false);
+  const [paymentNotice, setPaymentNotice] = useState('');
 
   // Resolve product details from the live API (demo data as fallback)
   useEffect(() => {
@@ -52,9 +59,26 @@ export default function CheckoutPage() {
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
+  // Load Razorpay checkout script dynamically
+  function loadRazorpayScript(): Promise<boolean> {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  }
+
   async function handlePlaceOrder(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError('');
+    setPaymentNotice('');
 
     if (cartItems.length === 0) {
       setError('Your cart is empty. Add items before placing an order.');
@@ -103,30 +127,98 @@ export default function CheckoutPage() {
         cartItems.map((item) => ({ productId: item.productId, quantity: item.quantity }))
       );
 
-      // Map UI payment method to API format
-      let apiPaymentMethod: 'cod' | 'razorpay';
-      if (paymentMethod === 'COD') {
-        apiPaymentMethod = 'cod';
-      } else {
-        // UPI and Card both use Razorpay in the backend
-        apiPaymentMethod = 'razorpay';
-      }
-
       // Normalize phone: ensure it has country code
       const normalizedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/\D/g, '')}`;
+
+      // Determine payment method
+      const useOnlinePayment = paymentMethod === 'online';
+      let apiPaymentMethod: 'cod' | 'razorpay' = useOnlinePayment ? 'razorpay' : 'cod';
 
       // Place the order
       const order = await placeOrder(cartId, {
         phone: normalizedPhone,
         firstName: fullName,
         paymentMethod: apiPaymentMethod,
-        sellerState: state.toUpperCase().slice(0, 2), // Map state name to code (e.g., "Maharashtra" → "MH")
+        sellerState: state.toUpperCase().slice(0, 2),
         buyerState: state.toUpperCase().slice(0, 2),
         customerGstin: gstin,
         notes: `Address: ${address}, ${city}, ${state} ${pincode}`,
       });
 
-      // Success: show confirmation screen
+      // If online payment is selected, try Razorpay flow
+      if (useOnlinePayment) {
+        const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+
+        // Check if Razorpay is configured
+        if (!razorpayKey) {
+          setPaymentNotice('Online payment will be available soon. Your order has been placed as Cash on Delivery.');
+          setOrderNumber(order.orderNumber);
+          setPlacedTotal(order.grandTotal || subtotal);
+          setPlaced(true);
+          clearCart();
+          setPlacing(false);
+          return;
+        }
+
+        try {
+          // Create Razorpay payment order
+          const razorpayOrderId = await createPaymentOrder(order.orderId);
+
+          // Load Razorpay script
+          const scriptLoaded = await loadRazorpayScript();
+          if (!scriptLoaded) {
+            throw new Error('Failed to load Razorpay checkout');
+          }
+
+          // Open Razorpay checkout
+          const options = {
+            key: razorpayKey,
+            order_id: razorpayOrderId,
+            amount: order.grandTotal, // Amount in paise
+            currency: 'INR',
+            name: 'Zainab Jewellers',
+            description: `Order ${order.orderNumber}`,
+            prefill: {
+              name: fullName,
+              contact: normalizedPhone,
+            },
+            theme: {
+              color: '#8B7355',
+            },
+            handler: function (response: any) {
+              // Payment successful
+              setOrderNumber(order.orderNumber);
+              setPlacedTotal(order.grandTotal || subtotal);
+              setPlaced(true);
+              clearCart();
+              setPlacing(false);
+            },
+            modal: {
+              ondismiss: function () {
+                // Payment cancelled
+                setError('Payment was cancelled. Please try again or choose Cash on Delivery.');
+                setPlacing(false);
+              },
+            },
+          };
+
+          const razorpay = new window.Razorpay(options);
+          razorpay.open();
+          return; // Exit here, handler will complete the flow
+        } catch (paymentError) {
+          // Payment endpoint failed, fall back to COD
+          console.error('Payment setup failed, falling back to COD:', paymentError);
+          setPaymentNotice('Online payment is temporarily unavailable. Your order has been placed as Cash on Delivery.');
+          setOrderNumber(order.orderNumber);
+          setPlacedTotal(order.grandTotal || subtotal);
+          setPlaced(true);
+          clearCart();
+          setPlacing(false);
+          return;
+        }
+      }
+
+      // COD flow: show success immediately
       setOrderNumber(order.orderNumber);
       setPlacedTotal(order.grandTotal || subtotal);
       setPlaced(true);
@@ -151,11 +243,18 @@ export default function CheckoutPage() {
           Your order{' '}
           <span className="font-bold text-[var(--color-accent)]">{orderNumber}</span> has been confirmed.
         </p>
+        {paymentNotice && (
+          <div className="max-w-lg mx-auto mb-6 p-4 rounded-md bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700">
+            <p className="text-sm text-blue-700 dark:text-blue-300">{paymentNotice}</p>
+          </div>
+        )}
         <div className="elegant-card inline-block px-8 py-6 mb-10 text-left">
           <div className="grid grid-cols-2 gap-6 text-sm">
             <div>
               <span className="text-gray-600 dark:text-gray-400">Payment method:</span>
-              <div className="font-semibold text-[var(--color-foreground)] mt-1">{paymentMethod}</div>
+              <div className="font-semibold text-[var(--color-foreground)] mt-1">
+                {paymentMethod === 'online' ? 'Online Payment' : 'Cash on Delivery'}
+              </div>
             </div>
             <div>
               <span className="text-gray-600 dark:text-gray-400">Total:</span>
@@ -308,47 +407,34 @@ export default function CheckoutPage() {
             <div className="bg-white dark:bg-gray-900 rounded-lg p-6 shadow-md">
               <h2 className="font-bold text-xl mb-4">Payment Method</h2>
               <div className="space-y-3">
-                <label className="flex items-center gap-3 p-4 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
+                <label className="flex items-center gap-3 p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-[var(--color-accent)] dark:hover:border-[var(--color-accent)] transition-colors has-[:checked]:border-[var(--color-accent)] has-[:checked]:bg-gradient-to-br has-[:checked]:from-amber-50/50 has-[:checked]:to-orange-50/50 dark:has-[:checked]:from-amber-900/20 dark:has-[:checked]:to-orange-900/20">
                   <input
                     type="radio"
                     name="payment"
-                    checked={paymentMethod === 'UPI'}
-                    onChange={() => setPaymentMethod('UPI')}
+                    checked={paymentMethod === 'online'}
+                    onChange={() => setPaymentMethod('online')}
+                    className="w-5 h-5 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                   />
-                  <div>
-                    <div className="font-semibold">UPI</div>
+                  <div className="flex-1">
+                    <div className="font-semibold text-[var(--color-foreground)]">Online Payment (UPI/Card)</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Pay via Google Pay, PhonePe, Paytm, etc.
+                      Pay securely via UPI, Credit/Debit Card, Net Banking
                     </div>
                   </div>
                 </label>
 
-                <label className="flex items-center gap-3 p-4 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
+                <label className="flex items-center gap-3 p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-[var(--color-accent)] dark:hover:border-[var(--color-accent)] transition-colors has-[:checked]:border-[var(--color-accent)] has-[:checked]:bg-gradient-to-br has-[:checked]:from-amber-50/50 has-[:checked]:to-orange-50/50 dark:has-[:checked]:from-amber-900/20 dark:has-[:checked]:to-orange-900/20">
                   <input
                     type="radio"
                     name="payment"
-                    checked={paymentMethod === 'Card'}
-                    onChange={() => setPaymentMethod('Card')}
+                    checked={paymentMethod === 'cod'}
+                    onChange={() => setPaymentMethod('cod')}
+                    className="w-5 h-5 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                   />
-                  <div>
-                    <div className="font-semibold">Credit/Debit Card</div>
+                  <div className="flex-1">
+                    <div className="font-semibold text-[var(--color-foreground)]">Cash on Delivery</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Visa, Mastercard, Rupay
-                    </div>
-                  </div>
-                </label>
-
-                <label className="flex items-center gap-3 p-4 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked={paymentMethod === 'COD'}
-                    onChange={() => setPaymentMethod('COD')}
-                  />
-                  <div>
-                    <div className="font-semibold">Cash on Delivery (COD)</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Pay when you receive
+                      Pay when you receive your order
                     </div>
                   </div>
                 </label>

@@ -5,7 +5,7 @@ const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 // Import after mocking
-const { createCart, placeOrder } = await import('./api');
+const { createCart, placeOrder, createPaymentOrder } = await import('./api');
 
 describe('Checkout API', () => {
   beforeEach(() => {
@@ -62,10 +62,11 @@ describe('Checkout API', () => {
   });
 
   describe('placeOrder', () => {
-    it('maps PascalCase response to camelCase', async () => {
+    it('maps PascalCase response to camelCase including orderId', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
+          OrderId: 'ord_abc123',
           OrderNumber: 'AUR-123456',
           GrandTotal: '8500.00',
         }),
@@ -80,6 +81,7 @@ describe('Checkout API', () => {
       });
 
       expect(result).toEqual({
+        orderId: 'ord_abc123',
         orderNumber: 'AUR-123456',
         grandTotal: 850000, // 8500.00 rupees → 850000 paise
       });
@@ -104,12 +106,13 @@ describe('Checkout API', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
+          OrderId: 'ord_xyz789',
           OrderNumber: 'AUR-789012',
           GrandTotal: '12000.00',
         }),
       });
 
-      await placeOrder('browser-456', {
+      const result = await placeOrder('browser-456', {
         phone: '+919876543210',
         firstName: 'John',
         paymentMethod: 'razorpay',
@@ -119,6 +122,7 @@ describe('Checkout API', () => {
         notes: 'Urgent delivery',
       });
 
+      expect(result.orderId).toBe('ord_xyz789');
       expect(mockFetch).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
@@ -146,6 +150,7 @@ describe('Checkout API', () => {
         buyerState: 'UP',
       });
 
+      expect(result.orderId).toMatch(/^local-\d+$/);
       expect(result.orderNumber).toMatch(/^LOCAL-\d{6}$/);
       expect(result.grandTotal).toBe(0);
     });
@@ -165,8 +170,43 @@ describe('Checkout API', () => {
         buyerState: 'UP',
       });
 
+      expect(result.orderId).toMatch(/^local-\d+$/);
       expect(result.orderNumber).toMatch(/^LOCAL-\d{6}$/);
       expect(result.grandTotal).toBe(0);
+    });
+  });
+
+  describe('createPaymentOrder', () => {
+    it('calls payment endpoint and returns razorpayOrderId', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          razorpayOrderId: 'order_MhYz1234567890',
+        }),
+      });
+
+      const result = await createPaymentOrder('ord_abc123');
+
+      expect(result).toBe('order_MhYz1234567890');
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/payments/orders/ord_abc123'),
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+    });
+
+    it('throws on payment endpoint failure', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        text: async () => 'Razorpay not configured',
+      });
+
+      await expect(createPaymentOrder('ord_abc123')).rejects.toThrow(
+        'Create payment order failed'
+      );
     });
   });
 });

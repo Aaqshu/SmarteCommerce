@@ -212,6 +212,7 @@ export async function createCart(
 }
 
 interface ApiOrderResponse {
+  OrderId: string;
   OrderNumber: string;
   GrandTotal: string;
 }
@@ -219,7 +220,7 @@ interface ApiOrderResponse {
 /**
  * Places an order from the server-side cart (checkout flow).
  * POST /orders/:cartId with customer + payment details.
- * Returns the created order number and grand total (in paise).
+ * Returns the created order ID, order number, and grand total (in paise).
  * Falls back to a local pseudo-order if the network fails (offline support).
  */
 export async function placeOrder(
@@ -233,7 +234,7 @@ export async function placeOrder(
     customerGstin?: string;
     notes?: string;
   }
-): Promise<{ orderNumber: string; grandTotal: number }> {
+): Promise<{ orderId: string; orderNumber: string; grandTotal: number }> {
   try {
     const response = await fetch(
       `${API_BASE_URL}/tenants/${TENANT_DB_NAME}/orders/${cartId}`,
@@ -251,6 +252,7 @@ export async function placeOrder(
 
     const data: ApiOrderResponse = await response.json();
     return {
+      orderId: data.OrderId,
       orderNumber: data.OrderNumber,
       grandTotal: Math.round(parseFloat(data.GrandTotal) * 100),
     };
@@ -258,8 +260,36 @@ export async function placeOrder(
     console.error('Failed to place order via API, falling back to local order:', error);
     // Offline fallback: return a local pseudo-order so the success screen still works
     return {
+      orderId: `local-${Date.now()}`,
       orderNumber: `LOCAL-${Date.now().toString().slice(-6)}`,
       grandTotal: 0,
     };
   }
+}
+
+interface ApiPaymentOrderResponse {
+  razorpayOrderId: string;
+}
+
+/**
+ * Creates a Razorpay payment order for an existing order.
+ * POST /tenants/:tenant/payments/orders/:orderId
+ * Returns the Razorpay order ID needed to open the checkout.
+ */
+export async function createPaymentOrder(orderId: string): Promise<string> {
+  const response = await fetch(
+    `${API_BASE_URL}/tenants/${TENANT_DB_NAME}/payments/orders/${orderId}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Create payment order failed: ${response.status} ${errorText}`);
+  }
+
+  const data: ApiPaymentOrderResponse = await response.json();
+  return data.razorpayOrderId;
 }
