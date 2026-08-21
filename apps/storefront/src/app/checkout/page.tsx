@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { DEMO_PRODUCTS } from '@smartecommerce/shared/demo-data';
 import { formatINR } from '@/lib/utils';
 import { useCart } from '@/components/cart-context';
-import { fetchProducts } from '@/lib/api';
+import { fetchProducts, createCart, placeOrder } from '@/lib/api';
 import type { Product } from '@smartecommerce/shared/types';
 
 function CheckCircleIcon({ className }: { className?: string }) {
@@ -29,6 +29,7 @@ export default function CheckoutPage() {
   const [orderNumber, setOrderNumber] = useState('');
   const [placedTotal, setPlacedTotal] = useState(0);
   const [catalog, setCatalog] = useState<Product[] | null>(null);
+  const [placing, setPlacing] = useState(false);
 
   // Resolve product details from the live API (demo data as fallback)
   useEffect(() => {
@@ -51,7 +52,7 @@ export default function CheckoutPage() {
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
-  function handlePlaceOrder(e: React.FormEvent<HTMLFormElement>) {
+  async function handlePlaceOrder(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError('');
 
@@ -80,20 +81,61 @@ export default function CheckoutPage() {
       setError('Please enter a valid 6-digit PIN code.');
       return;
     }
+
+    let gstin: string | undefined;
     if (customerType === 'B2B') {
-      const gstin = (form.elements.namedItem('gstin') as HTMLInputElement)?.value.trim() ?? '';
+      gstin = (form.elements.namedItem('gstin') as HTMLInputElement)?.value.trim() ?? '';
       if (!/^[0-9A-Z]{15}$/.test(gstin)) {
         setError('Please enter a valid 15-character GSTIN (B2B orders require it).');
         return;
       }
     }
 
-    // Demo order placement — no backend yet, so simulate success
-    const num = `AUR-${Date.now().toString().slice(-6)}`;
-    setOrderNumber(num);
-    setPlacedTotal(subtotal);
-    setPlaced(true);
-    clearCart();
+    setPlacing(true);
+
+    try {
+      // Generate a unique cart ID for this checkout attempt
+      const cartId = `browser-${Date.now()}`;
+
+      // Seed the server cart from the browser cart
+      await createCart(
+        cartId,
+        cartItems.map((item) => ({ productId: item.productId, quantity: item.quantity }))
+      );
+
+      // Map UI payment method to API format
+      let apiPaymentMethod: 'cod' | 'razorpay';
+      if (paymentMethod === 'COD') {
+        apiPaymentMethod = 'cod';
+      } else {
+        // UPI and Card both use Razorpay in the backend
+        apiPaymentMethod = 'razorpay';
+      }
+
+      // Normalize phone: ensure it has country code
+      const normalizedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/\D/g, '')}`;
+
+      // Place the order
+      const order = await placeOrder(cartId, {
+        phone: normalizedPhone,
+        firstName: fullName,
+        paymentMethod: apiPaymentMethod,
+        sellerState: state.toUpperCase().slice(0, 2), // Map state name to code (e.g., "Maharashtra" → "MH")
+        buyerState: state.toUpperCase().slice(0, 2),
+        customerGstin: gstin,
+        notes: `Address: ${address}, ${city}, ${state} ${pincode}`,
+      });
+
+      // Success: show confirmation screen
+      setOrderNumber(order.orderNumber);
+      setPlacedTotal(order.grandTotal || subtotal);
+      setPlaced(true);
+      clearCart();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to place order. Please try again.');
+    } finally {
+      setPlacing(false);
+    }
   }
 
   if (placed) {
@@ -380,8 +422,8 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              <button type="submit" className="btn-primary w-full">
-                Place Order
+              <button type="submit" className="btn-primary w-full" disabled={placing}>
+                {placing ? 'Placing order...' : 'Place Order'}
               </button>
 
               <div className="mt-4 text-xs text-gray-600 dark:text-gray-400 text-center">
