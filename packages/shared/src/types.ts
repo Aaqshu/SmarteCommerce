@@ -10,6 +10,7 @@ export interface Product {
   metal: 'Gold' | 'Platinum' | 'Silver' | 'Diamond' | 'Pearl' | 'Ruby' | 'Mixed';
   purity?: string; // e.g. "22K", "18K", "92.5%"
   category: string;
+  createdOn?: string | null;
   images: string[];
   stock: number;
   weight?: number; // in grams

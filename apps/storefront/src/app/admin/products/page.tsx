@@ -30,6 +30,9 @@ export default async function AdminProductsPage() {
                   Product
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                  Added On
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                   Category
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
@@ -76,6 +79,15 @@ export default async function AdminProductsPage() {
                           <div className="text-xs text-gray-500 dark:text-gray-400">{product.slug}</div>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                      {product.createdOn
+                        ? new Date(product.createdOn).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })
+                        : '—'}
                     </td>
                     <td className="px-6 py-4 text-sm text-[var(--color-foreground)]">
                       {product.category}

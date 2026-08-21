@@ -14,6 +14,7 @@ interface ApiProductRow {
   SellingPrice: string; // "8500000"
   Images?: unknown;
   Status: string;
+  CreatedOn?: string | null;
   CategoryName?: string;
   BrandName?: string;
 }
@@ -47,6 +48,7 @@ function mapApiProductToProduct(row: ApiProductRow): Product {
     gstRate: parseFloat(row.GstRate),
     metal,
     category: row.CategoryName || 'Uncategorized',
+    createdOn: row.CreatedOn ?? null,
     images,
     stock: 100, // Fallback — no inventory tracking yet
     reviews: [], // No reviews in API yet
